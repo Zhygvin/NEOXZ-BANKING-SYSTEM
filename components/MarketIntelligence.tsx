@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, Globe, TrendingUp, Users, ShieldCheck, 
@@ -127,7 +126,7 @@ const MarketIntelligence: React.FC = () => {
                 </p>
                 <div className="flex items-center justify-center lg:justify-end gap-5 mt-8">
                    <div className="px-10 py-3 rounded-2xl bg-amber-500/10 text-amber-500 text-[14px] font-black border-2 border-amber-500/30 uppercase tracking-[0.4em] shadow-xl">
-                      SOVEREIGN_ACCUMULATION_v16
+                      NEOXZ_ALPHA_v16.2.1
                    </div>
                 </div>
              </div>

@@ -31,7 +31,7 @@ const PublishedWatermark: React.FC = () => {
         </div>
         <div className="flex flex-col">
           <span className="text-[8px] font-black text-white uppercase tracking-[0.4em]">
-            {isLocked ? 'Master Beneficiary Lock' : isDeployed ? 'Production Anchored' : 'Sovereign Production'}
+            {isLocked ? 'Master Beneficiary Lock' : isDeployed ? 'NEOXZ ALPHA 16.2.1' : 'NEOXZ ALPHA CORE'}
           </span>
           <div className="flex items-center gap-2">
             <Fingerprint className="w-2.5 h-2.5 text-slate-500" />

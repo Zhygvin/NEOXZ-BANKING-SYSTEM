@@ -52,7 +52,7 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
           <div>
             <h3 className="text-3xl font-black uppercase tracking-[0.4em] text-white">Global Distribution Core</h3>
             <span className={`text-[10px] font-bold tracking-[0.5em] uppercase italic ${isPublished ? 'text-emerald-400 glow-emerald' : 'text-indigo-400'}`}>
-              {isPublished ? 'v16.2.1 PRODUCTION STATE: SOVEREIGN MANIFESTED' : 'AWAITING FINAL TECHNOLOGICAL MANDATE'}
+              {isPublished ? 'ALPHA-16.2.1 CORE PRO: SOVEREIGN MANIFESTED' : 'AWAITING FINAL TECHNOLOGICAL MANDATE'}
             </span>
           </div>
         </div>
