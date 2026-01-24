@@ -5,9 +5,9 @@ import {
   Search, Lock, CheckCircle2, RefreshCw, Smartphone,
   Tornado, Star, Radio, Box, Layers, Database, UserCheck, Heart, HandCoins,
   ShieldCheck, Fingerprint, Coins, Binary, CreditCard, FileText, Globe, Key, ShieldX,
-  Satellite, ZapOff, Scale, TrendingUp, BarChart3
+  Satellite, ZapOff, Scale, TrendingUp, BarChart3, Building2
 } from 'lucide-react';
-import { SystemStatus, DeploymentLog } from './types.ts';
+import { SystemStatus, DeploymentLog, IngestedFile } from './types.ts';
 import Assistant from './components/Assistant.tsx';
 import Logo from './components/Logo.tsx';
 import SovereignSubscriptionOverlay from './components/SovereignSubscriptionOverlay.tsx';
@@ -19,6 +19,7 @@ import MarketIntelligence from './components/MarketIntelligence.tsx';
 import PublishedWatermark from './components/PublishedWatermark.tsx';
 import MasterAutomationOverlay from './components/MasterAutomationOverlay.tsx';
 import ConsortiumMasterHub from './components/ConsortiumMasterHub.tsx';
+import BaselComplianceMonitor from './components/BaselComplianceMonitor.tsx';
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(() => localStorage.getItem('neoxz_mandate_anchored') === 'true');
@@ -30,12 +31,17 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
   
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'CONSOLE' | 'SATELLITE' | 'LOAN' | 'AML' | 'LEDGER' | 'MARKET'>(
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'CONSOLE' | 'SATELLITE' | 'LOAN' | 'AML' | 'LEDGER' | 'MARKET' | 'REGULATORY'>(
     localStorage.getItem('neoxz_production_mode') === 'true' ? 'DASHBOARD' : 'CONSOLE'
   );
   
-  const [dashboardView, setDashboardView] = useState<'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL'>('OVERVIEW');
+  const [dashboardView, setDashboardView] = useState<'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL' | 'REGULATORY' | 'INGESTION'>('OVERVIEW');
   
+  const [ingestedFiles, setIngestedFiles] = useState<IngestedFile[]>(() => {
+    const saved = localStorage.getItem('neoxz_ingested_files');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [stats, setStats] = useState<SystemStatus>({
     dssUptime: 100,
     neoxzCoreTemp: 32,
@@ -98,6 +104,13 @@ const App: React.FC = () => {
     addLog('SYSTEM', `Satellite Node ${platformSerial} Provisioned & Verified.`, 'SUCCESS');
   };
 
+  const handleUpload = (files: IngestedFile[]) => {
+    const updated = [...files, ...ingestedFiles];
+    setIngestedFiles(updated);
+    localStorage.setItem('neoxz_ingested_files', JSON.stringify(updated));
+    files.forEach(f => addLog('SYSTEM', `Payload Ingested: ${f.name} | HASH: ${f.hash.substring(0, 8)}`, 'LIVE_DEPLOY'));
+  };
+
   const startDeploymentSequence = () => {
     setIsDeploying(true);
     addLog('PRODUCTION', 'Initiating Final Technological Mandate sequence...', 'MANDATE_SEQUENCE');
@@ -152,6 +165,7 @@ const App: React.FC = () => {
              {[
                { id: 'DASHBOARD', label: 'Command Hub', icon: BarChart3 },
                { id: 'CONSOLE', label: 'Mandate Hub', icon: LayoutGrid },
+               { id: 'REGULATORY', label: 'Basel III Rails', icon: Building2 },
                { id: 'SATELLITE', label: 'Issued Node', icon: Satellite },
                { id: 'MARKET', label: 'Market Intel', icon: TrendingUp },
                { id: 'LOAN', label: 'HBRV Capital', icon: HandCoins },
@@ -207,8 +221,13 @@ const App: React.FC = () => {
               <ConsortiumMasterHub 
                 stats={stats} 
                 activeView={dashboardView} 
-                onViewChange={setDashboardView} 
+                onViewChange={setDashboardView}
+                ingestedFiles={ingestedFiles}
+                onUpload={handleUpload}
               />
+           )}
+           {activeTab === 'REGULATORY' && (
+             <BaselComplianceMonitor stats={stats} autoSync={true} />
            )}
            {activeTab === 'CONSOLE' && (
               <ConsortiumPublishingHub 

@@ -4,17 +4,21 @@ import {
   ArrowUpRight, Activity, Zap, TrendingUp, 
   Network, Landmark, ShieldCheck, Timer, 
   Gauge, Box, Share2, Radio, Fingerprint,
-  Tornado, Orbit, Sparkles, Waves, BarChart3
+  Tornado, Orbit, Sparkles, Waves, BarChart3, Building2, UploadCloud, Database
 } from 'lucide-react';
-import { SystemStatus } from '../types';
+import { SystemStatus, IngestedFile } from '../types';
+import BaselComplianceMonitor from './BaselComplianceMonitor.tsx';
+import DataIngestionVault from './DataIngestionVault.tsx';
 
 interface ConsortiumMasterHubProps {
   stats: SystemStatus;
-  activeView: 'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL';
-  onViewChange: (view: 'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL') => void;
+  activeView: 'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL' | 'REGULATORY' | 'INGESTION';
+  onViewChange: (view: 'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL' | 'REGULATORY' | 'INGESTION') => void;
+  ingestedFiles?: IngestedFile[];
+  onUpload?: (files: IngestedFile[]) => void;
 }
 
-const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, activeView, onViewChange }) => {
+const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, activeView, onViewChange, ingestedFiles = [], onUpload }) => {
   const [load, setLoad] = useState(0.02);
   const [latency, setLatency] = useState(0.001);
   const [singularityFactor, setSingularityFactor] = useState(1.000000);
@@ -38,6 +42,8 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
   const navItems = [
     { id: 'OVERVIEW', label: 'Command Hub', icon: LayoutGrid, color: 'emerald' },
     { id: 'CAPITAL', label: 'Financial Rails', icon: Wallet, color: 'amber' },
+    { id: 'REGULATORY', label: 'Basel III', icon: Building2, color: 'indigo' },
+    { id: 'INGESTION', label: 'Vault Upload', icon: Database, color: 'cyan' },
     { id: 'SECURITY', label: 'Security Grid', icon: ShieldAlert, color: 'rose' },
     { id: 'NEURAL', label: 'Neural Core', icon: Cpu, color: 'purple' },
   ] as const;
@@ -46,12 +52,12 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
         <div className="flex-1 flex items-center justify-between bg-slate-900/40 border border-slate-800 p-2 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all relative group ${
+                className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all relative group shrink-0 ${
                   activeView === item.id 
                     ? `bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.2)] scale-105 z-10` 
                     : `text-slate-500 hover:text-white hover:bg-white/5`
@@ -115,7 +121,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
                   </svg>
                 </div>
                 
-                <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                <div className="absolute top-0 right-0 p-12 opacity-0.03 group-hover:opacity-10 transition-opacity">
                    <Landmark className="w-64 h-64 text-emerald-500" />
                 </div>
 
@@ -139,7 +145,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
                    <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${isDeployed ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,1)]' : 'bg-cyan-500'} animate-pulse`}></div>
                       <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${isDeployed ? 'text-emerald-500/60' : 'text-slate-500'}`}>
-                        {isDeployed ? 'REALITY ANCHOR: PH-MNL-01 | WISE_MTLS_PRODUCTION' : 'Anchored to Maya Node-41176 | SDS Handshake'}
+                        {isDeployed ? 'REALITY ANCHORED: PH-MNL-01 | WISE_MTLS_PRODUCTION' : 'Anchored to Maya Node-41176 | SDS Handshake'}
                       </p>
                    </div>
                 </div>
@@ -160,7 +166,6 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
                 </div>
              </div>
 
-             {/* Quantum Readiness Matrix */}
              <div className="p-10 rounded-[3rem] bg-black border border-slate-800 relative overflow-hidden flex flex-col items-center justify-center gap-6 shadow-2xl group/ready">
                 <div className="absolute inset-0 opacity-10 flex items-center justify-center">
                    <Waves className="w-[120%] h-[120%] text-emerald-500/20 animate-[pulse_4s_ease-in-out_infinite]" />
@@ -214,7 +219,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
                       <Sparkles className={`w-5 h-5 ${isDeployed ? 'text-emerald-400' : 'text-amber-400'}`} />
                       <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">{isDeployed ? 'Reality Stabilized' : 'Singularity Lock'}</span>
                    </div>
-                   <div className={`px-2 py-0.5 rounded ${isDeployed ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-500'} text-[8px] font-black border border-emerald-500/20`}>
+                   <div className={`px-2 py-0.5 rounded ${isDeployed ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400'} text-[8px] font-black border border-emerald-500/20`}>
                      {isDeployed ? 'MANIFESTED' : 'STAGED'}
                    </div>
                 </div>
@@ -224,6 +229,18 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ stats, active
                 </div>
              </div>
           </div>
+        </div>
+      )}
+
+      {activeView === 'REGULATORY' && (
+        <div className="animate-in slide-in-from-right-4 duration-500">
+           <BaselComplianceMonitor stats={stats} autoSync={true} />
+        </div>
+      )}
+
+      {activeView === 'INGESTION' && onUpload && (
+        <div className="animate-in slide-in-from-bottom-4 duration-500">
+           <DataIngestionVault onUpload={onUpload} ingestedFiles={ingestedFiles} />
         </div>
       )}
     </div>

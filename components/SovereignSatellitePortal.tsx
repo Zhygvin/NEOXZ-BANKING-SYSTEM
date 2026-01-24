@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
-import { Globe, ShieldCheck, Zap, Network, Smartphone, Cpu, Coins, CreditCard, Binary, FileText, ArrowUpRight, Activity, Search, Lock, ShieldX } from 'lucide-react';
+/* Added missing RefreshCw and ShieldAlert imports from lucide-react */
+import { Globe, ShieldCheck, Zap, Network, Smartphone, Cpu, Coins, CreditCard, Binary, FileText, ArrowUpRight, Activity, Search, Lock, ShieldX, RefreshCw, ShieldAlert } from 'lucide-react';
 
 const SovereignSatellitePortal: React.FC = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -40,8 +40,8 @@ const SovereignSatellitePortal: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
           <div className="p-8 rounded-[3rem] bg-black/60 border border-slate-800 space-y-5 shadow-2xl group/card hover:border-emerald-500/30 transition-all">
              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Platform Integrity</span>
-                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Platform Integrity</span>
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
              </div>
              <div className="flex flex-col">
                 <span className="text-3xl font-black text-white uppercase tracking-tighter">SECURED</span>
@@ -54,7 +54,7 @@ const SovereignSatellitePortal: React.FC = () => {
 
           <div className="p-8 rounded-[3rem] bg-black/60 border border-slate-800 space-y-5 shadow-2xl group/card hover:border-indigo-500/30 transition-all">
              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Central Link</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Central Link</span>
                 <Coins className="w-5 h-5 text-amber-500" />
              </div>
              <div className="flex flex-col">
@@ -68,7 +68,7 @@ const SovereignSatellitePortal: React.FC = () => {
 
           <div className="p-8 rounded-[3rem] bg-black/60 border border-slate-800 space-y-5 shadow-2xl group/card hover:border-indigo-500/30 transition-all">
              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Global Status</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Status</span>
                 <Globe className="w-5 h-5 text-cyan-400" />
              </div>
              <div className="flex flex-col">
