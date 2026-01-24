@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Rocket, ShieldCheck, Globe, Network, Crown, UploadCloud, CheckCircle2, Lock, ExternalLink, Copy, Check, Eye, Wifi, Loader2, Zap, Smartphone, Cpu } from 'lucide-react';
 import Logo from './Logo';
@@ -36,27 +35,7 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
 
   const startUploadSequence = async () => {
     if (isPublished || isUploading) return;
-    
-    setIsUploading(true);
-    const steps = [
-      "ISOLATING HARDWARE CORE...",
-      "SYNCHRONIZING GLOBAL MESH...",
-      "ENFORCING SignaSovereign v4.2.1...",
-      "ANCHORING DECOUPLED RAILS...",
-      "FINALIZING TECHNOLOGICAL MANDATE..."
-    ];
-
-    for (let i = 0; i < steps.length; i++) {
-      setUploadStatus(steps[i]);
-      for (let p = 0; p <= 20; p++) {
-        setUploadProgress(i * 20 + p);
-        await new Promise(r => setTimeout(r, 20));
-      }
-      await new Promise(r => setTimeout(r, 400));
-    }
-    
-    onPublish();
-    setIsUploading(false);
+    onPublish(); // Delegate to App.tsx for the Master Overlay sequence
   };
 
   return (
@@ -73,7 +52,7 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
           <div>
             <h3 className="text-3xl font-black uppercase tracking-[0.4em] text-white">Global Distribution Core</h3>
             <span className={`text-[10px] font-bold tracking-[0.5em] uppercase italic ${isPublished ? 'text-emerald-400 glow-emerald' : 'text-indigo-400'}`}>
-              {isPublished ? 'v16.2 PRODUCTION STATE: MANIFESTED' : 'AWAITING AUTOMATION TO PRODUCTION'}
+              {isPublished ? 'v16.2.1 PRODUCTION STATE: SOVEREIGN MANIFESTED' : 'AWAITING FINAL TECHNOLOGICAL MANDATE'}
             </span>
           </div>
         </div>
@@ -102,7 +81,7 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
                    </div>
                    <div className="flex flex-col">
                       <span className="text-4xl font-black text-white mono">4,117</span>
-                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Global Markets Accessible</span>
+                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Global Federated Edges Live</span>
                    </div>
                 </div>
                 {isPublished && (
@@ -139,7 +118,7 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">AML Overwatch</span>
                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
                 </div>
-                <span className="text-xl font-black text-white mono uppercase">JAN_2026_STD</span>
+                <span className="text-xl font-black text-white mono uppercase">SOVEREIGN_STD</span>
              </div>
           </div>
         </div>
@@ -158,45 +137,25 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
               
               <div className="space-y-6 max-w-md">
                  <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-tight">
-                   {isPublished ? 'SYSTEMS DISTRIBUTED' : isUploading ? 'EXECUTING AUTOMATION...' : 'AUTOMATE PRODUCTION'}
+                   {isPublished ? 'SYSTEMS DEPLOYED' : 'EXECUTE PRODUCTION'}
                  </h4>
                  <p className="text-sm font-medium text-slate-400 leading-relaxed uppercase tracking-widest opacity-80">
                    {isPublished 
-                     ? "The satellite platform is now decoupled and issued. Distribution to all feasible markets is live."
-                     : isUploading
-                       ? uploadStatus
-                       : "Trigger the Final Technological Mandate to shift all rails to a Production state and issue universal satellite nodes."
+                     ? "The technological mandate is fully distributed. All satellite nodes are issued and decoupled from standard institutional interference."
+                     : "Final Technological Mandate required to shift all rails to a production state and distribute the sovereign anchor across all edge nodes."
                    }
                  </p>
               </div>
 
               {!isPublished && (
                 <div className="w-full max-w-sm space-y-6">
-                   {isUploading && (
-                     <div className="space-y-2">
-                        <div className="flex justify-between px-2">
-                           <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{uploadStatus}</span>
-                           <span className="text-[10px] font-black text-white mono">{uploadProgress}%</span>
-                        </div>
-                        <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 shadow-inner">
-                           <div 
-                             className="h-full bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-600 transition-all duration-300"
-                             style={{ width: `${uploadProgress}%` }}
-                           ></div>
-                        </div>
-                     </div>
-                   )}
                    <button 
                      onClick={startUploadSequence}
                      disabled={isUploading}
-                     className={`w-full py-8 rounded-[3rem] font-black uppercase tracking-[0.5em] text-[11px] transition-all shadow-2xl flex items-center justify-center gap-6 ${
-                       isUploading 
-                         ? 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800' 
-                         : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/40 active:scale-95 group/btn'
-                     }`}
+                     className={`w-full py-8 rounded-[3rem] font-black uppercase tracking-[0.5em] text-[11px] transition-all shadow-2xl flex items-center justify-center gap-6 bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/40 active:scale-95 group/btn border-2 border-white/10`}
                    >
-                     {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Zap className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />}
-                     {isUploading ? 'MANDATING...' : 'EXECUTE PRODUCTION SEQUENCE'}
+                     <Zap className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />
+                     EXECUTE PRODUCTION SEQUENCE
                    </button>
                 </div>
               )}

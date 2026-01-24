@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Shield, Zap, Wallet, Landmark, Cpu, Activity,
@@ -6,7 +5,7 @@ import {
   Search, Lock, CheckCircle2, RefreshCw, Smartphone,
   Tornado, Star, Radio, Box, Layers, Database, UserCheck, Heart, HandCoins,
   ShieldCheck, Fingerprint, Coins, Binary, CreditCard, FileText, Globe, Key, ShieldX,
-  Satellite, ZapOff, Scale, TrendingUp
+  Satellite, ZapOff, Scale, TrendingUp, BarChart3
 } from 'lucide-react';
 import { SystemStatus, DeploymentLog } from './types.ts';
 import Assistant from './components/Assistant.tsx';
@@ -18,21 +17,60 @@ import ConsortiumPublishingHub from './components/ConsortiumPublishingHub.tsx';
 import SovereignSatellitePortal from './components/SovereignSatellitePortal.tsx';
 import MarketIntelligence from './components/MarketIntelligence.tsx';
 import PublishedWatermark from './components/PublishedWatermark.tsx';
+import MasterAutomationOverlay from './components/MasterAutomationOverlay.tsx';
+import ConsortiumMasterHub from './components/ConsortiumMasterHub.tsx';
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(() => localStorage.getItem('neoxz_mandate_anchored') === 'true');
   const [isProduction, setIsProduction] = useState(() => localStorage.getItem('neoxz_production_mode') === 'true');
+  const [isDeploying, setIsDeploying] = useState(false);
   const [platformSerial, setPlatformSerial] = useState<string | null>(() => localStorage.getItem('neoxz_platform_serial'));
   const [subscriberData, setSubscriberData] = useState(() => {
     const saved = localStorage.getItem('neoxz_sovereign_identity');
     return saved ? JSON.parse(saved) : null;
   });
   
-  const [activeTab, setActiveTab] = useState<'CONSOLE' | 'SATELLITE' | 'LOAN' | 'AML' | 'LEDGER' | 'MARKET'>('CONSOLE');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'CONSOLE' | 'SATELLITE' | 'LOAN' | 'AML' | 'LEDGER' | 'MARKET'>(
+    localStorage.getItem('neoxz_production_mode') === 'true' ? 'DASHBOARD' : 'CONSOLE'
+  );
+  
+  const [dashboardView, setDashboardView] = useState<'OVERVIEW' | 'CAPITAL' | 'SECURITY' | 'NEURAL'>('OVERVIEW');
+  
+  const [stats, setStats] = useState<SystemStatus>({
+    dssUptime: 100,
+    neoxzCoreTemp: 32,
+    tcpThroughput: 985.4,
+    manusQueueSize: 0,
+    activeProtocols: 4117,
+    neoxzBankCapital: 985004531802,
+    founderReserve: 54500000,
+    dailyInflow: 2400000,
+    cyberSync: 1.0,
+    lightWebLatency: 0.001,
+    tokenizationStatus: 'LOCKED',
+    truthFilterActive: true,
+    legalCompliance: 'SOVEREIGN_BENEFICIARY_LOCKED',
+    biometricStability: 1.0,
+    realityParity: 1.0,
+    orlLevel: 'PRODUCTION',
+    vaultSecurity: 'SOVEREIGN_FORTRESS',
+    threatLevel: 'LOW',
+    lightWebStatus: 'OPERATIONAL',
+    realityImpact: 'MANIFESTED',
+    shieldIntegrity: 100,
+    coreImmutability: 'LOCKED',
+    institutionalId: 'SDS-9850-PH',
+    kycStatus: 'VERIFIED',
+    isQuantumOverdrive: true,
+    mtlsStatus: 'ENFORCED',
+    wiseSubdomain: 'api-mtls.transferwise.com'
+  });
+
   const [balance, setBalance] = useState(() => {
     const savedBalance = localStorage.getItem('neoxz_satellite_balance');
     return savedBalance ? parseFloat(savedBalance) : (subscriberData ? 55.00 : 0.00);
   });
+  
   const [logs, setLogs] = useState<DeploymentLog[]>([]);
 
   useEffect(() => {
@@ -60,10 +98,19 @@ const App: React.FC = () => {
     addLog('SYSTEM', `Satellite Node ${platformSerial} Provisioned & Verified.`, 'SUCCESS');
   };
 
-  const handlePublish = () => {
+  const startDeploymentSequence = () => {
+    setIsDeploying(true);
+    addLog('PRODUCTION', 'Initiating Final Technological Mandate sequence...', 'MANDATE_SEQUENCE');
+  };
+
+  const finalizeProduction = () => {
+    setIsDeploying(false);
     setIsProduction(true);
     localStorage.setItem('neoxz_production_mode', 'true');
-    addLog('PRODUCTION', 'Final Technological Mandate Executed. Application shifted to Production State.', 'LIVE_DEPLOY');
+    setActiveTab('DASHBOARD');
+    document.body.classList.add('sovereign-bloom');
+    addLog('PRODUCTION', 'Universal Anchor Manifested. Application is now Sovereign Production Node.', 'LIVE_DEPLOY');
+    setTimeout(() => document.body.classList.remove('sovereign-bloom'), 3000);
   };
 
   if (!isAuthorized) {
@@ -81,16 +128,20 @@ const App: React.FC = () => {
     <div className={`flex h-screen w-full bg-[#020202] text-slate-100 selection:bg-emerald-500/30 overflow-hidden font-sans ${isProduction ? 'production-mode' : ''}`}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(16,185,129,0.05)_0%,_transparent_70%)] pointer-events-none"></div>
 
+      {isDeploying && <MasterAutomationOverlay onComplete={finalizeProduction} />}
+
       <aside className="w-80 border-r border-slate-900 bg-black/95 flex flex-col z-20 backdrop-blur-3xl">
         <div className="p-8 border-b border-slate-900 space-y-4">
           <div className="flex items-center gap-4">
-            <div className={`p-2 rounded-xl transition-all ${isProduction ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-indigo-500/10 border-indigo-500/20'}`}>
+            <div className={`p-2 rounded-xl transition-all ${isProduction ? 'bg-emerald-500/10 border-emerald-500/20 production-pulse' : 'bg-indigo-500/10 border-indigo-500/20'}`}>
                <Logo size={40} />
             </div>
             <div>
-              <h2 className="text-xl font-black italic text-white tracking-tighter uppercase">Sovereign</h2>
+              <h2 className="text-xl font-black italic text-white tracking-tighter uppercase">
+                {isProduction ? 'Sovereign Pro' : 'Sovereign'}
+              </h2>
               <span className={`text-[8px] font-black uppercase tracking-widest leading-none ${isProduction ? 'text-emerald-400' : 'text-indigo-400'}`}>
-                {isProduction ? 'Production Node v16.2' : 'Staged Satellite v16.2'}
+                {isProduction ? 'Production Node v16.2.1' : 'Staged Satellite v16.2'}
               </span>
             </div>
           </div>
@@ -99,7 +150,8 @@ const App: React.FC = () => {
         <div className="flex-1 p-6 space-y-6">
           <nav className="flex flex-col gap-2">
              {[
-               { id: 'CONSOLE', label: 'Mandate Deploy', icon: LayoutGrid },
+               { id: 'DASHBOARD', label: 'Command Hub', icon: BarChart3 },
+               { id: 'CONSOLE', label: 'Mandate Hub', icon: LayoutGrid },
                { id: 'SATELLITE', label: 'Issued Node', icon: Satellite },
                { id: 'MARKET', label: 'Market Intel', icon: TrendingUp },
                { id: 'LOAN', label: 'HBRV Capital', icon: HandCoins },
@@ -144,25 +196,32 @@ const App: React.FC = () => {
                  <p className="text-4xl font-black text-white mono tracking-tighter glow-emerald">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               </div>
               <div className="h-12 w-px bg-slate-800"></div>
-              <div className="p-5 rounded-2xl bg-emerald-500 text-black shadow-xl animate-pulse cursor-pointer hover:scale-110 transition-transform">
+              <div className={`p-5 rounded-2xl ${isProduction ? 'bg-emerald-500 text-black shadow-emerald-500/20' : 'bg-slate-800 text-slate-500'} shadow-xl transition-all cursor-pointer hover:scale-110`}>
                  <Wallet className="w-6 h-6" />
               </div>
            </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-12 custom-scrollbar space-y-12 relative">
+           {activeTab === 'DASHBOARD' && (
+              <ConsortiumMasterHub 
+                stats={stats} 
+                activeView={dashboardView} 
+                onViewChange={setDashboardView} 
+              />
+           )}
            {activeTab === 'CONSOLE' && (
               <ConsortiumPublishingHub 
-                onPublish={handlePublish} 
+                onPublish={startDeploymentSequence} 
                 isPublished={isProduction} 
-                stats={{ neoxzBankCapital: 985004531802 }} 
+                stats={stats} 
               />
            )}
            {activeTab === 'SATELLITE' && <SovereignSatellitePortal />}
            {activeTab === 'MARKET' && <MarketIntelligence />}
            {activeTab === 'LOAN' && <LoanMandateConsole onAuthorize={(amt) => {
              setBalance(prev => prev + amt);
-             addLog('BANK', `Loan Mandate Credit Authorized: $${amt.toLocaleString()}.`, 'PROSPERITY');
+             addLog('BANK', `Loan Mandate Capital Credit Authorized: $${amt.toLocaleString()}.`, 'PROSPERITY');
            }} />}
            {activeTab === 'AML' && (
              <div className="p-12 rounded-[4rem] bg-rose-500/5 border border-rose-500/20 space-y-10 animate-in zoom-in-95 relative overflow-hidden">

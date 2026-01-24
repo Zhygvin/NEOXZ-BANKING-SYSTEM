@@ -18,15 +18,105 @@ export interface GroundingSource {
 
 export interface MarketIntelligenceReport {
   valuation: number;
+  totalWorth5Year: number;
   multiplier: string;
   viabilityScore: number;
   strategicRationale: string;
+  totalWorthEvaluation: string;
+  acquisitionLikelihood: number;
   targetMarkets: string[];
-  suggestedInvestors: { name: string; rationale: string; link?: string }[];
-  licensingEstimates: { type: string; estimatedValue: number; notes: string }[];
-  registrationCosts: { jurisdiction: string; setupCost: number; timeline: string }[];
-  legalConstraints: { risk: string; mitigation: string; severity: 'LOW' | 'MEDIUM' | 'HIGH' }[];
-  fiveYearProjection: { year: number; projectedCap: number }[];
+  suggestedInvestors: { name: string; rationale: string; sector: string; potentialOffer: string }[];
+  licensingEstimates: { type: string; estimatedValue: number; setupCost: number; overhead: string; duration: string }[];
+  registrationCosts: { jurisdiction: string; setupCost: number; timeline: string; regulatoryBody: string }[];
+  legalConstraints: { risk: string; mitigation: string; severity: 'LOW' | 'MEDIUM' | 'HIGH'; complianceCode: string }[];
+  fiveYearProjection: { year: number; projectedCap: number; revenueGrowth: string; nodeExpansion: number }[];
+}
+
+export interface HistoryItem {
+  id: string;
+  timestamp: string;
+  status: 'MANIFESTED' | 'ERROR' | 'ENFORCED' | 'QUANTUM_SYNCED';
+  attribution: string;
+  payload: {
+    intent: string;
+    dataPayload: string;
+  };
+  executionSteps: ExecutionStep[];
+  groundingSources?: GroundingSource[];
+  rawLogs?: string[];
+  errorMessage?: string;
+}
+
+export interface FinancialReport {
+  totalSystemicCapital: number;
+  founderReserve: number;
+  complianceStatus: string;
+  assetBreakdown: {
+    institutionalBacking: string;
+    digitalGoldReserves: string;
+    sovereignDebtBonds: string;
+  };
+  sdsHash: string;
+  summary: string;
+}
+
+export interface InstitutionalCharter {
+  bodyName: string;
+  regId: string;
+  status: 'VERIFIED' | 'PENDING';
+  complianceLevel: string;
+}
+
+export interface ForensicTarget {
+  id: string;
+  identifier: string;
+  type: string;
+  riskLevel: 'LOW' | 'ELEVATED' | 'CRITICAL';
+}
+
+export interface DeviceNode {
+  name: string;
+  category: 'MIND' | 'BODY' | 'REALITY' | 'CAPITAL';
+  device: string;
+  status: string;
+}
+
+export interface MCPServer {
+  name: string;
+  status: 'CONNECTED' | 'RECONNECTING' | 'ERROR' | 'DISCONNECTED';
+  command: string;
+  args: string[];
+}
+
+export interface PaymentPlatform {
+  id: string;
+  name: string;
+  category: 'MOBILE' | 'CRYPTO' | 'INSTITUTIONAL';
+  status: 'OPERATIONAL' | 'DEGRADED' | 'MAINTENANCE';
+  protocol: string;
+  liquidity: string;
+}
+
+export interface WiseVault {
+  id: string;
+  name: string;
+  totalAssets: number;
+  status: 'SYNCED' | 'DRIFTING';
+  nodes: number;
+}
+
+export interface WiseBalance {
+  id: number;
+  currency: string;
+  type: 'STANDARD' | 'SAVINGS';
+  name: string;
+  icon: string;
+  investmentState: string;
+  amount: { value: number; currency: string };
+  reservedAmount: { value: number; currency: string };
+  cashAmount: { value: number; currency: string };
+  totalWorth: { value: number; currency: string };
+  visible: boolean;
 }
 
 export interface IngestedFile {

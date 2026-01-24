@@ -5,13 +5,14 @@ import {
   Settings, Terminal, HardDrive, Network,
   BarChart3, SearchCheck, RefreshCw, Radio
 } from 'lucide-react';
+import { SystemStatus } from '../types.ts';
 
 interface SovereignOperationsDeckProps {
   onTriggerAudit: () => void;
   onRecalibrateParity: () => void;
   isProcessing: boolean;
   isRecalibrating: boolean;
-  stats: any;
+  stats: SystemStatus;
 }
 
 const SovereignOperationsDeck: React.FC<SovereignOperationsDeckProps> = ({ 

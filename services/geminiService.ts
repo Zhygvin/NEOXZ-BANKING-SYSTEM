@@ -1,23 +1,21 @@
-
 import { GoogleGenAI, Type, FunctionDeclaration, Modality } from "@google/genai";
-import { ChatMessage, MarketIntelligenceReport } from "../types.ts";
+import { ChatMessage, MarketIntelligenceReport, SystemStatus } from "../types.ts";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateMarketIntelligence = async (): Promise<{ report: MarketIntelligenceReport, sources: any[] }> => {
   const ai = getAI();
-  const prompt = `Perform an exhaustive 5-year Strategic Valuation & Viability Assessment (2026-2031) for the NEOXZ ADVANCED BANKING SYSTEM. 
-  CONTEXT: 4,117 Node Mesh, Jan 2026 ISO 20022 Compliance, SignaSovereign v4.2.1, $985B Systemic Core.
+  const prompt = `Perform an exhaustive 5-year Strategic Worth Evaluation (2026-2031) for the NEOXZ ADVANCED BANKING SYSTEM.
+  CONTEXT: 4,117 Node Mesh, $985B Systemic Core (Liquid + Recovery), SignaSovereign v4.2.1 IP, Wise v3.2 mTLS Rails.
   
-  REQUIRED DATA:
-  1. CURRENT MARKET VALUATION: Total enterprise value today.
-  2. LICENSING: List 3 key financial licenses (e.g. EMI, Sovereign Banking, Digital Asset) with their estimated asset value and overhead.
-  3. REGISTRATION: 3 key jurisdictions (e.g. Philippines, Singapore, Switzerland) with setup costs and timelines.
-  4. LEGAL CONSTRAINTS: 3 primary risks (e.g. AML/CTF, Cross-border Data, Basel IV) and AI-driven mitigation strategies.
-  5. 5-YEAR PROJECTION: Annual projected market cap from 2026 to 2031 based on the $985B core and mesh expansion.
-  6. INVESTOR LOCATOR: 5 specific institutional buyers or sovereign wealth funds.
+  MANDATORY EVALUATION PARAMETERS:
+  1. TOTAL PROJECT WORTH (5-YEAR): Calculate the rough cumulative enterprise value by 2031. Assuming a 4x mesh expansion and institutional adoption.
+  2. LICENSING ASSETS: Value of 3 global licenses (Singapore MAS, Swiss FINMA, PH EMI). Include the "Asset Value" these licenses add to the project.
+  3. REGISTRATION & LEGAL: Total projected costs for global registration and maintenance of legal immunity protocols over 5 years.
+  4. 5-YEAR FISCAL TRAJECTORY: Year-by-year projected Market Cap.
+  5. ACQUISITION TARGETS: Locate 5 specific Tier-1 prospects. MANDATORY: Include Elon Musk (X/Tesla/SpaceX) and "Global Heads of State / Sovereign Wealth Funds" as priority buyers. Detail their specific rationale for securing the NEOXZ mandate (e.g. planetary displacement, national sovereignty) and their likely multi-trillion dollar offer basis.
   
-  Ground your answer in real-world fintech trends. Use the googleSearch tool to locate active buyers.`;
+  Format the output as a clean, authoritative JSON report.`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -28,10 +26,13 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          valuation: { type: Type.NUMBER },
+          valuation: { type: Type.NUMBER, description: "Current Valuation" },
+          totalWorth5Year: { type: Type.NUMBER, description: "Rough total project worth in 5 years" },
           multiplier: { type: Type.STRING },
           viabilityScore: { type: Type.NUMBER },
           strategicRationale: { type: Type.STRING },
+          totalWorthEvaluation: { type: Type.STRING },
+          acquisitionLikelihood: { type: Type.NUMBER },
           targetMarkets: { type: Type.ARRAY, items: { type: Type.STRING } },
           suggestedInvestors: {
             type: Type.ARRAY,
@@ -39,7 +40,9 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
               type: Type.OBJECT,
               properties: {
                 name: { type: Type.STRING },
-                rationale: { type: Type.STRING }
+                rationale: { type: Type.STRING },
+                sector: { type: Type.STRING },
+                potentialOffer: { type: Type.STRING }
               }
             }
           },
@@ -50,7 +53,9 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
               properties: {
                 type: { type: Type.STRING },
                 estimatedValue: { type: Type.NUMBER },
-                notes: { type: Type.STRING }
+                setupCost: { type: Type.NUMBER },
+                overhead: { type: Type.STRING },
+                duration: { type: Type.STRING }
               }
             }
           },
@@ -61,7 +66,8 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
               properties: {
                 jurisdiction: { type: Type.STRING },
                 setupCost: { type: Type.NUMBER },
-                timeline: { type: Type.STRING }
+                timeline: { type: Type.STRING },
+                regulatoryBody: { type: Type.STRING }
               }
             }
           },
@@ -72,7 +78,8 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
               properties: {
                 risk: { type: Type.STRING },
                 mitigation: { type: Type.STRING },
-                severity: { type: Type.STRING }
+                severity: { type: Type.STRING },
+                complianceCode: { type: Type.STRING }
               }
             }
           },
@@ -82,15 +89,18 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
               type: Type.OBJECT,
               properties: {
                 year: { type: Type.NUMBER },
-                projectedCap: { type: Type.NUMBER }
+                projectedCap: { type: Type.NUMBER },
+                revenueGrowth: { type: Type.STRING },
+                nodeExpansion: { type: Type.NUMBER }
               }
             }
           }
         },
         required: [
-          "valuation", "multiplier", "viabilityScore", "strategicRationale", 
-          "targetMarkets", "suggestedInvestors", "licensingEstimates", 
-          "registrationCosts", "legalConstraints", "fiveYearProjection"
+          "valuation", "totalWorth5Year", "multiplier", "viabilityScore", "strategicRationale", 
+          "totalWorthEvaluation", "acquisitionLikelihood", "targetMarkets", 
+          "suggestedInvestors", "licensingEstimates", "registrationCosts", 
+          "legalConstraints", "fiveYearProjection"
         ]
       }
     }
@@ -100,6 +110,39 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
   const report = JSON.parse(response.text);
 
   return { report, sources };
+};
+
+export const analyzeThreatMandate = async (stats: SystemStatus) => {
+  const ai = getAI();
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Analyze current system telemetry and identify potential malicious vectors. Threat Level: ${stats.threatLevel}. Integrity: ${stats.shieldIntegrity}%. Location: Philippines.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          riskScore: { type: Type.NUMBER },
+          riskVectors: { type: Type.ARRAY, items: { type: Type.STRING } },
+          forensicSummary: { type: Type.STRING },
+          mitigationChecklist: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                action: { type: Type.STRING },
+                priority: { type: Type.STRING }
+              }
+            }
+          },
+          qTeamDirectives: { type: Type.STRING }
+        },
+        required: ["riskScore", "riskVectors", "forensicSummary", "mitigationChecklist", "qTeamDirectives"]
+      }
+    }
+  });
+  return JSON.parse(response.text);
 };
 
 const satelliteTools: FunctionDeclaration[] = [
@@ -126,7 +169,18 @@ export const chatWithAssistant = async (history: ChatMessage[], message: string,
     parts: [{ text: `${m.agentName ? `[${m.agentName}]: ` : ''}${m.text}` }] 
   }));
   
-  contents.push({ role: 'user', parts: [{ text: message }] });
+  const userPart: any = { text: message };
+  if (imageBase64) {
+    contents.push({
+      role: 'user',
+      parts: [
+        { inlineData: { data: imageBase64, mimeType: 'image/jpeg' } },
+        userPart
+      ]
+    });
+  } else {
+    contents.push({ role: 'user', parts: [userPart] });
+  }
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -157,7 +211,7 @@ export const generateSpeech = async (text: string): Promise<string | undefined> 
     contents: [{ parts: [{ text }] }],
     config: {
       responseModalities: [Modality.AUDIO],
-      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
     },
   });
   return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
