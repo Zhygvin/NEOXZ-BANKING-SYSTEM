@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEOXZ | Sovereign Command Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 15L80 32.5V67.5L50 85L20 67.5V32.5L50 15Z' stroke='%2310b981' stroke-width='8' fill='none'/%3E%3Ccircle cx='50' cy='50' r='12' fill='%2310b981'/%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Space+Grotesk', sans-serif;
+            background-color: #020202;
+            color: #f8fafc;
+            overflow-x: hidden;
+            transition: background-color 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020202;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b98122;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b98144;
+        }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(16, 185, 129, 0.1);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .reality-glitch {
+            animation: glitch 0.2s infinite;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0) skew(0); }
+            20% { transform: translate(-2px, 2px) skew(2deg); }
+            40% { transform: translate(-2px, -2px) skew(-2deg); }
+            60% { transform: translate(2px, 2px) skew(1deg); }
+            80% { transform: translate(2px, -2px) skew(-1deg); }
+            100% { transform: translate(0) skew(0); }
+        }
+        .quantum-overdrive {
+            filter: contrast(1.3) brightness(1.2) saturate(1.4);
+            transition: filter 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .quantum-overdrive::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, transparent 30%, rgba(16, 185, 129, 0.15) 100%);
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        /* Production Mode Activation State */
+        .production-mode {
+            background-color: #010402;
+        }
+        .production-mode::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        @keyframes warp-lines {
+            0% { background-position: 0% 0%; opacity: 0; }
+            50% { opacity: 0.25; }
+            100% { background-position: 100% 100%; opacity: 0; }
+        }
+        .warp-active::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(16, 185, 129, 0.1) 10px, rgba(16, 185, 129, 0.1) 20px);
+            background-size: 200% 200%;
+            animation: warp-lines 0.5s linear infinite;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        @keyframes singu-pulse {
+            0% { filter: hue-rotate(0deg) contrast(1); }
+            50% { filter: hue-rotate(15deg) contrast(1.5); }
+            100% { filter: hue-rotate(0deg) contrast(1); }
+        }
+        .singularity-active {
+            animation: singu-pulse 0.5s infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-8px, -8px); }
+            20%, 40%, 60%, 80% { transform: translate(8px, 8px); }
+        }
+        .animate-shake-heavy {
+            animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) infinite;
+        }
+        .glow-emerald { text-shadow: 0 0 30px rgba(16, 185, 129, 1); }
+        .glow-cyan { text-shadow: 0 0 30px rgba(6, 182, 212, 1); }
+        .glow-amber { text-shadow: 0 0 30px rgba(245, 158, 11, 1); }
+
+        /* Final Sovereign Bloom Animation */
+        @keyframes bloom {
+          0% { filter: brightness(1) contrast(1); }
+          50% { filter: brightness(2) contrast(1.5) saturate(2); }
+          100% { filter: brightness(1.2) contrast(1.2) saturate(1.2); }
+        }
+        .sovereign-bloom {
+          animation: bloom 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes drift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .bg-mesh-animate {
+          background-size: 200% 200%;
+          animation: drift 15s ease infinite;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react": "https://esm.sh/react@19.0.0",
+    "@google/genai": "https://esm.sh/@google/genai@0.2.1",
+    "d3": "https://esm.sh/d3@7.9.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.475.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body class="bg-black text-slate-100 min-h-screen">
+    <div class="scanline"></div>
+    <div class="reality-ripple" id="realityRipple"></div>
+    <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
+</body>
+</html>

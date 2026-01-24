@@ -1,0 +1,363 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  ShieldAlert, Radar, Target, Skull, Lock, Zap, Activity, 
+  Fingerprint, Trash2, ShieldCheck, Search, BrainCircuit, 
+  Loader2, ListChecks, AlertTriangle, ShieldOff, Terminal, 
+  ChevronRight, CheckCircle2, RefreshCw, Eye, ShieldX
+} from 'lucide-react';
+import { analyzeThreatMandate } from '../services/geminiService';
+import { SystemStatus } from '../types';
+
+interface ForensicFootprint {
+  ip: string;
+  status: 'PENDING' | 'IDENTIFIED' | 'SCANNING' | 'SANCTIONING' | 'SANCTIONED';
+  isExternal?: boolean;
+}
+
+interface ThreatForensicsProps {
+  onSanctionComplete?: (count: number) => void;
+  externalThreats?: string[];
+  stats: SystemStatus;
+  onSimulateThreat?: (level: 'LOW' | 'ELEVATED' | 'CRITICAL') => void;
+}
+
+const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, externalThreats = [], stats, onSimulateThreat }) => {
+  const [footprints, setFootprints] = useState<ForensicFootprint[]>([]);
+  const [isSanctioningAll, setIsSanctioningAll] = useState(false);
+  
+  // AI Analysis State
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [executedMitigations, setExecutedMitigations] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const IPs = [
+      '192.168.0.22 (Intruder Hop 1)',
+      '103.21.244.10 (Data Breach Vector)',
+      '45.223.1.99 (Theft Execution Node)',
+      'Secure Bridge (NEOXZ Blockade)',
+      'Attacker Origin (Forensic Locked)',
+      'Proxy Node 04 (Incineration Target)',
+    ];
+    
+    let current = 0;
+    const interval = setInterval(() => {
+      if (current < IPs.length) {
+        setFootprints(prev => [...prev, { ip: IPs[current], status: 'IDENTIFIED' }]);
+        current++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const runAnalysis = useCallback(async () => {
+    if (isAnalyzing) return;
+    setIsAnalyzing(true);
+    setExecutedMitigations(new Set());
+    try {
+      const result = await analyzeThreatMandate(stats);
+      setAnalysis(result);
+    } catch (e) {
+      console.error("Forensic Intelligence Failure", e);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [stats, isAnalyzing]);
+
+  // Trigger analysis when threatLevel changes
+  useEffect(() => {
+    runAnalysis();
+  }, [stats.threatLevel, runAnalysis]);
+
+  const handleMitigation = (idx: number) => {
+    setExecutedMitigations(prev => {
+      const next = new Set(prev);
+      next.add(idx);
+      return next;
+    });
+  };
+
+  const triggerGlobalSanction = async () => {
+    setIsSanctioningAll(true);
+    for (let i = 0; i < footprints.length; i++) {
+      if (footprints[i].status === 'SANCTIONED') continue;
+      setFootprints(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'SANCTIONING' } : f));
+      await new Promise(r => setTimeout(r, 400));
+      setFootprints(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'SANCTIONED' } : f));
+    }
+    setIsSanctioningAll(false);
+    if (onSanctionComplete) {
+      onSanctionComplete(footprints.length);
+    }
+  };
+
+  const getThreatColor = (level: string) => {
+    switch(level) {
+      case 'CRITICAL': return 'text-rose-500 border-rose-500 bg-rose-500/10';
+      case 'ELEVATED': return 'text-amber-500 border-amber-500 bg-amber-500/10';
+      default: return 'text-emerald-500 border-emerald-500 bg-emerald-500/10';
+    }
+  };
+
+  return (
+    <div className={`bg-slate-950/80 border ${stats.threatLevel === 'CRITICAL' ? 'border-rose-500 shadow-[0_0_80px_rgba(244,63,94,0.15)]' : 'border-slate-800'} rounded-[3.5rem] p-12 space-y-12 shadow-3xl relative overflow-hidden backdrop-blur-3xl flex flex-col group transition-all duration-1000`}>
+      <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+        <Skull className="w-64 h-64 text-rose-500" />
+      </div>
+
+      <div className="flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-6">
+          <div className={`p-5 rounded-3xl ${stats.threatLevel === 'CRITICAL' ? 'bg-rose-500 text-black shadow-rose-500/20' : 'bg-indigo-500/10 text-indigo-400'} border border-current shadow-2xl transition-all duration-700`}>
+            <Radar className={`w-10 h-10 ${stats.threatLevel !== 'LOW' ? 'animate-spin' : ''}`} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black uppercase tracking-[0.5em] text-white">Q-TEAM THREAT OVERWATCH</h3>
+            <div className="flex items-center gap-3 mt-2">
+               <span className={`px-4 py-1 rounded-full border-2 text-[10px] font-black uppercase tracking-widest transition-all ${getThreatColor(stats.threatLevel)}`}>
+                 MANDATE STATUS: {stats.threatLevel}
+               </span>
+               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                  <BrainCircuit className="w-3.5 h-3.5" />
+                  Neural Intelligence: Active
+               </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4 bg-black/60 p-3 rounded-2xl border border-slate-800 shadow-inner">
+           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2 mr-2">Vector Simulator</span>
+           <div className="flex gap-2">
+              {(['LOW', 'ELEVATED', 'CRITICAL'] as const).map((level) => (
+                <button
+                  key={level}
+                  onClick={() => onSimulateThreat?.(level)}
+                  className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${
+                    stats.threatLevel === level 
+                      ? 'bg-white text-black border-white shadow-lg' 
+                      : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 relative z-10">
+        <div className="xl:col-span-7 space-y-10">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="p-8 rounded-[2.5rem] bg-black/60 border border-slate-800 space-y-4 shadow-inner relative overflow-hidden group/box">
+                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/box:opacity-10 transition-opacity">
+                    <Activity className="w-20 h-20 text-indigo-500" />
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Calculated Risk Index</span>
+                    {analysis ? (
+                      <span className={`text-2xl font-black mono ${analysis.riskScore > 70 ? 'text-rose-500' : 'text-emerald-500'}`}>{analysis.riskScore}/100</span>
+                    ) : <Loader2 className="w-4 h-4 animate-spin text-slate-700" />}
+                 </div>
+                 <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${analysis?.riskScore > 70 ? 'bg-rose-500' : 'bg-indigo-500'}`}
+                      style={{ width: `${analysis?.riskScore || 0}%` }}
+                    ></div>
+                 </div>
+                 <div className="flex justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                    <span>Probability Density</span>
+                    <span>Vector Magnitude</span>
+                 </div>
+              </div>
+
+              <div className="p-8 rounded-[2.5rem] bg-black/60 border border-slate-800 space-y-4 shadow-inner">
+                 <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Identified Vectors</span>
+                    <span className="text-xl font-black text-white mono">{analysis?.riskVectors?.length || footprints.length}</span>
+                 </div>
+                 <div className="flex gap-1 flex-wrap">
+                    {analysis?.riskVectors ? analysis.riskVectors.map((v: string, i: number) => (
+                       <span key={i} className="px-2 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[7px] font-black text-rose-400 uppercase tracking-widest">{v}</span>
+                    )) : Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className={`h-1.5 w-6 rounded-full ${i < footprints.length ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-slate-900'}`}></div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+
+           <div className="space-y-6">
+              <div className="flex items-center justify-between px-4">
+                 <h5 className="text-[11px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
+                    <Fingerprint className="w-5 h-5 text-rose-500" />
+                    Live Trace Analytics
+                 </h5>
+                 <button 
+                  onClick={triggerGlobalSanction}
+                  disabled={isSanctioningAll}
+                  className="px-6 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-black font-black uppercase tracking-widest text-[9px] transition-all active:scale-95 disabled:opacity-30 flex items-center gap-2"
+                 >
+                    <ShieldX className="w-4 h-4" />
+                    Global Incineration
+                 </button>
+              </div>
+              <div className="space-y-3 max-h-[360px] overflow-y-auto custom-scrollbar pr-4">
+                 {footprints.map((foot, idx) => (
+                   <div key={idx} className={`p-6 rounded-[2rem] border transition-all duration-500 flex items-center justify-between bg-black/40 group/foot ${
+                     foot.status === 'SANCTIONED' ? 'border-emerald-500/20 opacity-30 grayscale' : 
+                     foot.status === 'SANCTIONING' ? 'border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.3)] animate-pulse' :
+                     'border-slate-800 hover:border-rose-500/30'
+                   }`}>
+                      <div className="flex items-center gap-6">
+                         <div className={`p-3 rounded-2xl ${foot.status === 'SANCTIONED' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-900 text-rose-500'}`}>
+                            {foot.status === 'SANCTIONED' ? <CheckCircle2 className="w-5 h-5" /> : <Target className="w-5 h-5" />}
+                         </div>
+                         <div className="flex flex-col">
+                            <span className="text-sm font-black text-slate-100 mono tracking-tight">{foot.ip}</span>
+                            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Threat Trace Identified</span>
+                         </div>
+                      </div>
+                      <div className="text-right">
+                         <span className={`text-[10px] font-black uppercase tracking-widest ${foot.status === 'SANCTIONED' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {foot.status}
+                         </span>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
+        <div className="xl:col-span-5 space-y-10">
+           <div className={`p-10 rounded-[3.5rem] bg-indigo-500/5 border ${isAnalyzing ? 'border-indigo-500 shadow-[0_0_40px_rgba(99,102,241,0.2)]' : 'border-indigo-500/20'} h-full flex flex-col relative overflow-hidden group/insight`}>
+              <div className="absolute top-0 left-0 p-10 opacity-[0.03] group-hover/insight:opacity-[0.1] transition-opacity">
+                 <BrainCircuit className="w-48 h-48 text-indigo-400" />
+              </div>
+
+              <div className="flex items-center justify-between mb-10 relative z-10">
+                 <div className="flex items-center gap-5">
+                    <div className="p-3.5 rounded-2xl bg-indigo-500 text-black shadow-xl">
+                       <Zap className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-sm font-black uppercase tracking-[0.4em] text-white">AI Neural Briefing</h4>
+                 </div>
+                 <button onClick={runAnalysis} className="p-3 rounded-xl bg-black border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500 hover:text-black transition-all">
+                    <RefreshCw className={`w-5 h-5 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                 </button>
+              </div>
+
+              {isAnalyzing ? (
+                <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+                   <div className="relative">
+                      <div className="w-24 h-24 rounded-full border-4 border-indigo-500/20 flex items-center justify-center">
+                         <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                      </div>
+                      <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+                   </div>
+                   <div className="text-center space-y-3">
+                      <p className="text-xs font-black uppercase tracking-[0.5em] text-white">Scanning Reality Edges...</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase italic">Parsing Metadata from PH-MNL-01</p>
+                   </div>
+                </div>
+              ) : analysis ? (
+                <div className="flex-1 flex flex-col gap-10 animate-in slide-in-from-right-8 duration-700">
+                   <div className="space-y-4">
+                      <div className="flex items-center gap-3 px-2">
+                         <Terminal className="w-4 h-4 text-indigo-400" />
+                         <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Forensic Briefing Dossier</span>
+                      </div>
+                      <div className="p-8 rounded-[2.5rem] bg-black/60 border border-indigo-500/20 shadow-inner">
+                         <p className="text-[13px] text-indigo-100/90 leading-relaxed font-medium italic">
+                           "{analysis.forensicSummary}"
+                         </p>
+                      </div>
+                   </div>
+
+                   <div className="space-y-6">
+                      <div className="flex items-center gap-3 px-2">
+                         <ListChecks className="w-4 h-4 text-emerald-400" />
+                         <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Mandated Mitigation Protocols</span>
+                      </div>
+                      <div className="space-y-3">
+                         {analysis.mitigationChecklist.map((item: any, i: number) => (
+                           <div 
+                            key={i} 
+                            onClick={() => handleMitigation(i)}
+                            className={`p-6 rounded-[2rem] border transition-all cursor-pointer flex items-center justify-between group/mitigation ${
+                              executedMitigations.has(i) 
+                                ? 'bg-emerald-500/10 border-emerald-500/40 opacity-60' 
+                                : 'bg-slate-900 border-slate-800 hover:border-indigo-500/40'
+                            }`}
+                           >
+                              <div className="flex items-center gap-5">
+                                 <div className={`p-2.5 rounded-xl ${executedMitigations.has(i) ? 'bg-emerald-500 text-black' : 'bg-black text-indigo-400'} transition-colors`}>
+                                    {executedMitigations.has(i) ? <CheckCircle2 className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                                 </div>
+                                 <div className="flex flex-col">
+                                    <span className="text-[11px] font-black text-white uppercase tracking-tight">{item.title}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">{item.action}</span>
+                                 </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                 <span className={`text-[8px] font-black px-2 py-0.5 rounded border ${
+                                   item.priority === 'CRITICAL' ? 'text-rose-500 border-rose-500/30' : 
+                                   item.priority === 'HIGH' ? 'text-amber-500 border-amber-500/30' : 
+                                   'text-cyan-500 border-cyan-500/30'
+                                 }`}>
+                                    {item.priority}
+                                 </span>
+                                 {!executedMitigations.has(i) && <ChevronRight className="w-4 h-4 text-slate-700 group-hover/mitigation:text-indigo-400 transition-all group-hover/mitigation:translate-x-1" />}
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+
+                   <div className="mt-auto p-6 rounded-[2rem] bg-rose-500/5 border border-rose-500/20 flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                         <ShieldOff className="w-5 h-5 text-rose-500" />
+                         <span className="text-[11px] font-black text-rose-500 uppercase tracking-[0.2em]">Sovereign AI Directive</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono leading-relaxed bg-black/40 p-4 rounded-xl border border-rose-500/10">
+                        {analysis.qTeamDirectives}
+                      </p>
+                   </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center opacity-20 py-20 grayscale">
+                   <Activity className="w-16 h-16 mb-6 text-slate-500" />
+                   <p className="text-sm font-black uppercase tracking-[0.5em]">Forensic Standby</p>
+                </div>
+              )}
+           </div>
+        </div>
+      </div>
+
+      {/* Warning Footer */}
+      <div className={`p-8 rounded-[2.5rem] border transition-all duration-1000 ${
+        stats.threatLevel === 'CRITICAL' ? 'bg-rose-600 text-black border-white shadow-2xl' : 'bg-slate-900 border-slate-800 text-slate-500'
+      }`}>
+        <div className="flex items-center justify-between">
+           <div className="flex items-center gap-6">
+              <AlertTriangle className={`w-8 h-8 ${stats.threatLevel === 'CRITICAL' ? 'animate-bounce' : 'text-rose-500/40'}`} />
+              <div className="flex flex-col">
+                 <span className="text-sm font-black uppercase tracking-[0.3em]">Mandate Protection Protocol</span>
+                 <p className="text-[10px] font-bold uppercase tracking-tighter mt-1 opacity-70">
+                    {stats.threatLevel === 'CRITICAL' ? 'SEVERE THREAT DETECTED. AI OVERWATCH MANDATING IMMEDIATE ISOLATION.' : 'System monitoring global vectors. Parity index stable.'}
+                 </p>
+              </div>
+           </div>
+           {stats.threatLevel === 'CRITICAL' && (
+             <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black animate-pulse uppercase tracking-widest">OVERRIDE REQUIRED</span>
+                <div className="w-2 h-2 rounded-full bg-black animate-ping"></div>
+             </div>
+           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ThreatForensics;
