@@ -1,14 +1,79 @@
+
 import React, { useState } from 'react';
 import { 
-  Zap, UserCheck, BarChart3, Satellite, ShieldAlert, Activity
+  Zap, UserCheck, BarChart3, Satellite, ShieldAlert, Activity, History
 } from 'lucide-react';
 import Assistant from './components/Assistant.tsx';
 import Logo from './components/Logo.tsx';
 import SovereignSubscriptionOverlay from './components/SovereignSubscriptionOverlay.tsx';
 import ApiKeySetup from './components/ApiKeySetup.tsx';
 import ConsortiumMasterHub from './components/ConsortiumMasterHub.tsx';
+import ProtocolHistory from './components/ProtocolHistory.tsx';
 import QuickDeployOverlay from './components/QuickDeployOverlay.tsx';
 import PublishedWatermark from './components/PublishedWatermark.tsx';
+import { HistoryItem } from './types';
+
+const mockHistory: HistoryItem[] = [
+  {
+    id: 'MND-842-1',
+    timestamp: '2025-05-20 14:02:11',
+    status: 'MANIFESTED',
+    priority: 'SOVEREIGN',
+    attribution: 'FOUNDER_CORE',
+    payload: {
+      intent: 'Initialize Global Prosperity',
+      dataPayload: 'ACTION: ACTIVATE_RAILS | TARGET: PH_MNL_01 | VAL: $985B'
+    },
+    executionSteps: [
+      { label: 'DSS Verification', detail: 'Identity parity verified at 1.0000', timestamp: '14:02:11', status: 'SUCCESS' },
+      { label: 'mTLS Handshake', detail: 'Wise production tunnel established', timestamp: '14:02:12', status: 'SUCCESS' }
+    ]
+  },
+  {
+    id: 'MND-842-2',
+    timestamp: '2025-05-20 14:15:33',
+    status: 'ENFORCED',
+    priority: 'CRITICAL',
+    attribution: 'Q_TEAM_FORENSICS',
+    payload: {
+      intent: 'Isolate Malicious Vector',
+      dataPayload: 'ACTION: NULL_ROUTE | TARGET: 103.21.244.10 | SEVERITY: HIGH'
+    },
+    executionSteps: [
+      { label: 'Trace Signal', detail: 'Target IP triangulated to region SG', timestamp: '14:15:33', status: 'SUCCESS' },
+      { label: 'Sanction Lock', detail: 'Credential incineration complete', timestamp: '14:15:35', status: 'SUCCESS' }
+    ]
+  },
+  {
+    id: 'MND-842-3',
+    timestamp: '2025-05-20 14:22:05',
+    status: 'QUANTUM_SYNCED',
+    priority: 'STANDARD',
+    attribution: 'MAYA_BRIDGE',
+    payload: {
+      intent: 'Daily Asset Rebalancing',
+      dataPayload: 'ACTION: SHIFT_LIQUIDITY | FROM: USD_CORE | TO: PHP_VAULT'
+    },
+    executionSteps: [
+      { label: 'Compute Route', detail: 'Optimal displacement vector calculated', timestamp: '14:22:05', status: 'SUCCESS' }
+    ]
+  },
+  {
+    id: 'MND-842-4',
+    timestamp: '2025-05-20 14:30:10',
+    status: 'ERROR',
+    priority: 'ELEVATED',
+    attribution: 'ZAPPIER_HANDSHAKE',
+    payload: {
+      intent: 'External API Sync',
+      dataPayload: 'ACTION: FETCH_EXTERNAL_LEDGER | SOURCE: SAP_PROD'
+    },
+    errorMessage: 'Handshake timeout: External peer SAP_PROD is unresponsive.',
+    executionSteps: [
+      { label: 'INIT_SYNC', detail: 'Negotiating REST protocol...', timestamp: '14:30:10', status: 'ERROR' }
+    ]
+  }
+];
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(() => localStorage.getItem('neoxz_mandate_anchored') === 'true');
@@ -18,7 +83,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
   
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'NODE' | 'FORENSICS'>('DASHBOARD');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'NODE' | 'FORENSICS' | 'HISTORY'>('DASHBOARD');
   const [dashboardView, setDashboardView] = useState<'OVERVIEW' | 'INGESTION'>('OVERVIEW');
   
   const [balance, setBalance] = useState(() => {
@@ -80,12 +145,13 @@ const App: React.FC = () => {
            {[
              { id: 'DASHBOARD', icon: BarChart3 },
              { id: 'NODE', icon: Satellite },
-             { id: 'FORENSICS', icon: ShieldAlert }
+             { id: 'FORENSICS', icon: ShieldAlert },
+             { id: 'HISTORY', icon: History }
            ].map(item => (
              <button
                key={item.id}
                onClick={() => { setActiveTab(item.id as any); triggerQuantumSparks(); }}
-               className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === item.id ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'text-slate-800 hover:text-white'}`}
+               className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === item.id ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_200px_rgba(16,185,129,0.2)]' : 'text-slate-800 hover:text-white'}`}
              >
                <item.icon className="w-6 h-6" />
              </button>
@@ -93,7 +159,7 @@ const App: React.FC = () => {
         </nav>
       </aside>
 
-      {/* Dashboard View */}
+      {/* Main Content View */}
       <main className="flex-1 flex flex-col overflow-hidden bg-black">
         <header className="h-28 border-b border-white/5 flex items-center justify-between px-16 z-40">
            <div className="flex items-center gap-6">
@@ -128,7 +194,12 @@ const App: React.FC = () => {
                onViewChange={setDashboardView}
              />
            )}
-           {activeTab !== 'DASHBOARD' && (
+           {activeTab === 'HISTORY' && (
+             <div className="h-full">
+               <ProtocolHistory history={mockHistory} />
+             </div>
+           )}
+           {(activeTab === 'NODE' || activeTab === 'FORENSICS') && (
              <div className="flex flex-col items-center justify-center h-full opacity-20 space-y-10">
                 <Activity className="w-32 h-32 text-slate-700" />
                 <p className="text-4xl font-black uppercase tracking-[1.5em] text-slate-800">Off_Line</p>

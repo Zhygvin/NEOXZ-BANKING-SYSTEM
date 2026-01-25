@@ -36,6 +36,7 @@ export interface HistoryItem {
   id: string;
   timestamp: string;
   status: 'MANIFESTED' | 'ERROR' | 'ENFORCED' | 'QUANTUM_SYNCED';
+  priority: MandatePriority;
   attribution: string;
   payload: {
     intent: string;
