@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   ShieldAlert, Radar, Target, Skull, Lock, Zap, Activity, 
   Fingerprint, Trash2, ShieldCheck, Search, BrainCircuit, 
-  Loader2, ListChecks, AlertTriangle, ShieldOff, Terminal, 
-  ChevronRight, CheckCircle2, RefreshCw, Eye, ShieldX
+  Loader2, ListChecks, AlertTriangle, ShieldX, CheckCircle2, 
+  RefreshCw, ListFilter, ArrowDownWideNarrow, ArrowUpNarrowWide,
+  Terminal, ChevronRight
 } from 'lucide-react';
 import { analyzeThreatMandate } from '../services/geminiService';
 import { SystemStatus } from '../types';
@@ -29,6 +30,9 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
   const [analysis, setAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [executedMitigations, setExecutedMitigations] = useState<Set<number>>(new Set());
+  
+  // Sorting State
+  const [sortOrder, setSortOrder] = useState<'DEFAULT' | 'DESC' | 'ASC'>('DEFAULT');
 
   useEffect(() => {
     const IPs = [
@@ -102,8 +106,39 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
     }
   };
 
+  const getPriorityWeight = (p: string) => {
+    const v = p?.toUpperCase() || '';
+    if (v.includes('CRITICAL')) return 4;
+    if (v.includes('HIGH') || v.includes('ELEVATED')) return 3;
+    if (v.includes('MEDIUM')) return 2;
+    if (v.includes('LOW')) return 1;
+    return 0;
+  };
+
+  const toggleSort = () => {
+    setSortOrder(prev => {
+      if (prev === 'DEFAULT') return 'DESC';
+      if (prev === 'DESC') return 'ASC';
+      return 'DEFAULT';
+    });
+  };
+
+  const sortedChecklist = useMemo(() => {
+    if (!analysis?.mitigationChecklist) return [];
+    // We map to include original index to handle execution state correctly
+    const list = analysis.mitigationChecklist.map((item: any, index: number) => ({ ...item, originalIndex: index }));
+    
+    if (sortOrder === 'DEFAULT') return list;
+    
+    return list.sort((a: any, b: any) => {
+      const wa = getPriorityWeight(a.priority);
+      const wb = getPriorityWeight(b.priority);
+      return sortOrder === 'DESC' ? wb - wa : wa - wb;
+    });
+  }, [analysis, sortOrder]);
+
   return (
-    <div className={`bg-slate-950/80 border ${stats.threatLevel === 'CRITICAL' ? 'border-rose-500 shadow-[0_0_80px_rgba(244,63,94,0.15)]' : 'border-slate-800'} rounded-[3.5rem] p-12 space-y-12 shadow-3xl relative overflow-hidden backdrop-blur-3xl flex flex-col group transition-all duration-1000`}>
+    <div className={`bg-slate-900/80 border ${stats.threatLevel === 'CRITICAL' ? 'border-rose-500 shadow-[0_0_80px_rgba(244,63,94,0.15)]' : 'border-slate-800'} rounded-[3.5rem] p-12 space-y-12 shadow-3xl relative overflow-hidden backdrop-blur-3xl flex flex-col group transition-all duration-1000 animate-in fade-in zoom-in-95`}>
       <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
         <Skull className="w-64 h-64 text-rose-500" />
       </div>
@@ -256,104 +291,94 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
                       <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
                    </div>
                    <div className="text-center space-y-3">
-                      <p className="text-xs font-black uppercase tracking-[0.5em] text-white">Scanning Reality Edges...</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase italic">Parsing Metadata from PH-MNL-01</p>
+                      <p className="text-xs font-black uppercase tracking-widest text-white">Compiling Forensic Logic...</p>
+                      <p className="text-[9px] font-mono text-indigo-400">ANALYZING 4,117 NODES</p>
                    </div>
                 </div>
               ) : analysis ? (
-                <div className="flex-1 flex flex-col gap-10 animate-in slide-in-from-right-8 duration-700">
+                <div className="flex-1 space-y-8 relative z-10">
                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 px-2">
-                         <Terminal className="w-4 h-4 text-indigo-400" />
-                         <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Forensic Briefing Dossier</span>
+                      <div className="flex items-center gap-3 text-indigo-400">
+                         <Terminal className="w-4 h-4" />
+                         <span className="text-[10px] font-black uppercase tracking-widest">Q-Team Directive Digest</span>
                       </div>
-                      <div className="p-8 rounded-[2.5rem] bg-black/60 border border-indigo-500/20 shadow-inner">
-                         <p className="text-[13px] text-indigo-100/90 leading-relaxed font-medium italic">
-                           "{analysis.forensicSummary}"
-                         </p>
-                      </div>
-                   </div>
-
-                   <div className="space-y-6">
-                      <div className="flex items-center gap-3 px-2">
-                         <ListChecks className="w-4 h-4 text-emerald-400" />
-                         <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Mandated Mitigation Protocols</span>
-                      </div>
-                      <div className="space-y-3">
-                         {analysis.mitigationChecklist.map((item: any, i: number) => (
-                           <div 
-                            key={i} 
-                            onClick={() => handleMitigation(i)}
-                            className={`p-6 rounded-[2rem] border transition-all cursor-pointer flex items-center justify-between group/mitigation ${
-                              executedMitigations.has(i) 
-                                ? 'bg-emerald-500/10 border-emerald-500/40 opacity-60' 
-                                : 'bg-slate-900 border-slate-800 hover:border-indigo-500/40'
-                            }`}
-                           >
-                              <div className="flex items-center gap-5">
-                                 <div className={`p-2.5 rounded-xl ${executedMitigations.has(i) ? 'bg-emerald-500 text-black' : 'bg-black text-indigo-400'} transition-colors`}>
-                                    {executedMitigations.has(i) ? <CheckCircle2 className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
-                                 </div>
-                                 <div className="flex flex-col">
-                                    <span className="text-[11px] font-black text-white uppercase tracking-tight">{item.title}</span>
-                                    <span className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">{item.action}</span>
-                                 </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                 <span className={`text-[8px] font-black px-2 py-0.5 rounded border ${
-                                   item.priority === 'CRITICAL' ? 'text-rose-500 border-rose-500/30' : 
-                                   item.priority === 'HIGH' ? 'text-amber-500 border-amber-500/30' : 
-                                   'text-cyan-500 border-cyan-500/30'
-                                 }`}>
-                                    {item.priority}
-                                 </span>
-                                 {!executedMitigations.has(i) && <ChevronRight className="w-4 h-4 text-slate-700 group-hover/mitigation:text-indigo-400 transition-all group-hover/mitigation:translate-x-1" />}
-                              </div>
-                           </div>
-                         ))}
-                      </div>
-                   </div>
-
-                   <div className="mt-auto p-6 rounded-[2rem] bg-rose-500/5 border border-rose-500/20 flex flex-col gap-3">
-                      <div className="flex items-center gap-3">
-                         <ShieldOff className="w-5 h-5 text-rose-500" />
-                         <span className="text-[11px] font-black text-rose-500 uppercase tracking-[0.2em]">Sovereign AI Directive</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 font-mono leading-relaxed bg-black/40 p-4 rounded-xl border border-rose-500/10">
-                        {analysis.qTeamDirectives}
+                      <p className="text-xs text-slate-300 font-medium leading-relaxed bg-black/40 p-6 rounded-3xl border border-slate-800">
+                        {analysis.forensicSummary}
                       </p>
+                   </div>
+
+                   <div className="space-y-4">
+                      <div className="flex items-center justify-between px-2">
+                         <div className="flex items-center gap-3 text-white">
+                            <ListChecks className="w-4 h-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Forensic Mitigation Checklist</span>
+                         </div>
+                         
+                         {/* SORT BUTTON */}
+                         <button 
+                           onClick={toggleSort}
+                           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${
+                             sortOrder !== 'DEFAULT' 
+                               ? 'bg-indigo-500 text-black border-indigo-400 shadow-lg shadow-indigo-500/20' 
+                               : 'bg-black border-slate-800 text-slate-500 hover:text-indigo-400'
+                           }`}
+                         >
+                           {sortOrder === 'DEFAULT' && <ListFilter className="w-3.5 h-3.5" />}
+                           {sortOrder === 'DESC' && <ArrowDownWideNarrow className="w-3.5 h-3.5" />}
+                           {sortOrder === 'ASC' && <ArrowUpNarrowWide className="w-3.5 h-3.5" />}
+                           {sortOrder === 'DEFAULT' ? 'Sort: Default' : sortOrder === 'DESC' ? 'Sort: Critical' : 'Sort: Lowest'}
+                         </button>
+                      </div>
+
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                         {sortedChecklist.map((item: any) => {
+                           const isDone = executedMitigations.has(item.originalIndex);
+                           return (
+                             <button
+                               key={item.originalIndex}
+                               onClick={() => handleMitigation(item.originalIndex)}
+                               disabled={isDone}
+                               className={`w-full p-4 rounded-2xl border flex items-start gap-4 text-left transition-all group/item ${
+                                 isDone 
+                                   ? 'bg-emerald-500/10 border-emerald-500/20 opacity-60' 
+                                   : 'bg-black/60 border-slate-800 hover:border-indigo-500/40'
+                               }`}
+                             >
+                                <div className={`p-2 rounded-xl mt-0.5 ${
+                                  isDone ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-900 text-slate-500 group-hover/item:text-indigo-400'
+                                }`}>
+                                   {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                                </div>
+                                <div className="flex-1">
+                                   <div className="flex items-center justify-between mb-1">
+                                      <span className={`text-[10px] font-black uppercase tracking-wide ${isDone ? 'text-emerald-400' : 'text-slate-200'}`}>
+                                        {item.title}
+                                      </span>
+                                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
+                                        item.priority === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400' : 
+                                        item.priority === 'HIGH' ? 'bg-amber-500/20 text-amber-400' :
+                                        'bg-slate-800 text-slate-500'
+                                      }`}>
+                                        {item.priority}
+                                      </span>
+                                   </div>
+                                   <p className="text-[9px] text-slate-500 font-medium leading-relaxed group-hover/item:text-slate-400">
+                                     {item.action}
+                                   </p>
+                                </div>
+                             </button>
+                           );
+                         })}
+                      </div>
                    </div>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center opacity-20 py-20 grayscale">
-                   <Activity className="w-16 h-16 mb-6 text-slate-500" />
-                   <p className="text-sm font-black uppercase tracking-[0.5em]">Forensic Standby</p>
+                <div className="flex-1 flex flex-col items-center justify-center opacity-30 space-y-4">
+                   <ShieldCheck className="w-16 h-16 text-slate-600" />
+                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Forensics Offline</span>
                 </div>
               )}
            </div>
-        </div>
-      </div>
-
-      {/* Warning Footer */}
-      <div className={`p-8 rounded-[2.5rem] border transition-all duration-1000 ${
-        stats.threatLevel === 'CRITICAL' ? 'bg-rose-600 text-black border-white shadow-2xl' : 'bg-slate-900 border-slate-800 text-slate-500'
-      }`}>
-        <div className="flex items-center justify-between">
-           <div className="flex items-center gap-6">
-              <AlertTriangle className={`w-8 h-8 ${stats.threatLevel === 'CRITICAL' ? 'animate-bounce' : 'text-rose-500/40'}`} />
-              <div className="flex flex-col">
-                 <span className="text-sm font-black uppercase tracking-[0.3em]">Mandate Protection Protocol</span>
-                 <p className="text-[10px] font-bold uppercase tracking-tighter mt-1 opacity-70">
-                    {stats.threatLevel === 'CRITICAL' ? 'SEVERE THREAT DETECTED. AI OVERWATCH MANDATING IMMEDIATE ISOLATION.' : 'System monitoring global vectors. Parity index stable.'}
-                 </p>
-              </div>
-           </div>
-           {stats.threatLevel === 'CRITICAL' && (
-             <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black animate-pulse uppercase tracking-widest">OVERRIDE REQUIRED</span>
-                <div className="w-2 h-2 rounded-full bg-black animate-ping"></div>
-             </div>
-           )}
         </div>
       </div>
     </div>
