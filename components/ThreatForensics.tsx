@@ -4,7 +4,7 @@ import {
   Fingerprint, Trash2, ShieldCheck, Search, BrainCircuit, 
   Loader2, ListChecks, AlertTriangle, ShieldX, CheckCircle2, 
   RefreshCw, ListFilter, ArrowDownWideNarrow, ArrowUpNarrowWide,
-  Terminal, ChevronRight
+  Terminal, ChevronRight, X
 } from 'lucide-react';
 import { analyzeThreatMandate } from '../services/geminiService';
 import { SystemStatus } from '../types';
@@ -33,6 +33,9 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
   
   // Sorting State
   const [sortOrder, setSortOrder] = useState<'DEFAULT' | 'DESC' | 'ASC'>('DEFAULT');
+
+  // Deletion Confirmation State
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   useEffect(() => {
     const IPs = [
@@ -95,6 +98,13 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
     setIsSanctioningAll(false);
     if (onSanctionComplete) {
       onSanctionComplete(footprints.length);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget !== null) {
+      setFootprints(prev => prev.filter((_, i) => i !== deleteTarget));
+      setDeleteTarget(null);
     }
   };
 
@@ -253,10 +263,18 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
                             <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Threat Trace Identified</span>
                          </div>
                       </div>
-                      <div className="text-right">
+                      <div className="flex items-center gap-4">
                          <span className={`text-[10px] font-black uppercase tracking-widest ${foot.status === 'SANCTIONED' ? 'text-emerald-500' : 'text-rose-500'}`}>
                             {foot.status}
                          </span>
+                         {foot.status !== 'SANCTIONED' && (
+                           <button 
+                             onClick={() => setDeleteTarget(idx)}
+                             className="p-2 rounded-xl bg-slate-900 text-slate-500 hover:bg-rose-500 hover:text-white transition-all border border-slate-800"
+                           >
+                             <Trash2 className="w-3.5 h-3.5" />
+                           </button>
+                         )}
                       </div>
                    </div>
                  ))}
@@ -381,6 +399,37 @@ const ThreatForensics: React.FC<ThreatForensicsProps> = ({ onSanctionComplete, e
            </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {deleteTarget !== null && (
+        <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-200">
+           <div className="bg-slate-900 border border-rose-500/30 rounded-[3rem] p-10 max-w-md w-full shadow-[0_0_50px_rgba(244,63,94,0.15)] flex flex-col items-center text-center space-y-6 transform animate-in zoom-in-95">
+              <div className="p-6 rounded-full bg-rose-500/10 border border-rose-500/20">
+                 <ShieldX className="w-12 h-12 text-rose-500" />
+              </div>
+              <div className="space-y-2">
+                 <h4 className="text-xl font-black text-white uppercase tracking-wider">Confirm Erasure</h4>
+                 <p className="text-xs text-slate-400 font-medium">
+                   Are you sure you want to scrub this forensic trace? This action removes the node from immediate sanction targeting.
+                 </p>
+              </div>
+              <div className="flex gap-4 w-full pt-4">
+                 <button 
+                   onClick={() => setDeleteTarget(null)}
+                   className="flex-1 py-4 rounded-2xl bg-slate-800 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-700 transition-all"
+                 >
+                   Cancel
+                 </button>
+                 <button 
+                   onClick={confirmDelete}
+                   className="flex-1 py-4 rounded-2xl bg-rose-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-rose-500 transition-all shadow-lg shadow-rose-500/20"
+                 >
+                   Confirm Deletion
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
