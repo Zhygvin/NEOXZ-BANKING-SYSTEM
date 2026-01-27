@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Loader2, Check, ShieldCheck, Cloud, Key, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Loader2, Check, ShieldCheck, Cloud, Key, ExternalLink, AlertTriangle, Terminal } from 'lucide-react';
 import Logo from './Logo';
 
 interface ApiKeySetupProps {
@@ -9,6 +10,8 @@ interface ApiKeySetupProps {
 const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onSuccess }) => {
   const [booting, setBooting] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [manualKey, setManualKey] = useState('');
+  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -20,8 +23,9 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onSuccess }) => {
         // Attempt to check key availability
         const check = async () => {
             if ((window as any).aistudio && (window as any).aistudio.hasSelectedApiKey) {
-                return await (window as any).aistudio.hasSelectedApiKey();
+                if (await (window as any).aistudio.hasSelectedApiKey()) return true;
             }
+            if (localStorage.getItem('neoxz_api_key')) return true;
             return false;
         };
 
@@ -59,6 +63,15 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onSuccess }) => {
         // Fallback: Proceed anyway to allow UI access, API calls might fail but dashboard will load
         onSuccess();
     }
+  };
+
+  const handleManualSubmit = () => {
+    if (!manualKey.trim()) {
+      setError("Invalid Key Entry");
+      return;
+    }
+    localStorage.setItem('neoxz_api_key', manualKey.trim());
+    onSuccess();
   };
 
   if (booting) {
@@ -108,6 +121,38 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onSuccess }) => {
                 <Key className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 Select Paid API Key
               </button>
+              
+              <div className="relative flex items-center justify-center gap-4 opacity-50 py-2">
+                 <div className="h-px bg-slate-800 w-full"></div>
+                 <span className="text-[9px] font-black uppercase text-slate-500 whitespace-nowrap">OR</span>
+                 <div className="h-px bg-slate-800 w-full"></div>
+              </div>
+
+              {!showManual ? (
+                <button 
+                  onClick={() => setShowManual(true)}
+                  className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors flex items-center justify-center gap-2 w-full"
+                >
+                  <Terminal className="w-3 h-3" />
+                  Enter Manual Key (Founder)
+                </button>
+              ) : (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                   <input 
+                     value={manualKey}
+                     onChange={(e) => setManualKey(e.target.value)}
+                     placeholder="Paste Google API Key"
+                     className="w-full bg-black/60 border border-slate-800 rounded-2xl px-6 py-4 text-xs text-white outline-none focus:border-emerald-500/50 transition-all font-mono text-center"
+                     type="password"
+                   />
+                   <button 
+                     onClick={handleManualSubmit}
+                     className="w-full py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black uppercase tracking-widest text-[10px] transition-all"
+                   >
+                     Authenticate
+                   </button>
+                </div>
+              )}
               
               <a 
                 href="https://ai.google.dev/gemini-api/docs/billing" 

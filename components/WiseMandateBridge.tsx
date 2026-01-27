@@ -6,7 +6,7 @@ import {
   Network, MapPin, Search, Navigation, Terminal, Copy, 
   Check, Info, ArrowUpRight, BarChart3, Fingerprint, Lock, 
   Wifi, PieChart, Wallet, Archive, ArrowDownRight, Scale,
-  Activity, Smartphone, ExternalLink, Settings
+  Activity, Smartphone, ExternalLink, Settings, Command
 } from 'lucide-react';
 import { WiseVault, WiseBalance } from '../types';
 
@@ -138,7 +138,7 @@ const WiseMandateBridge: React.FC = () => {
                </span>
                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500 text-black text-[8px] font-black uppercase tracking-widest shadow-lg">
                   <Lock className="w-2.5 h-2.5" />
-                  mTLS Enforced
+                  Vault: NEOXZ QUANTUM BANKING SYSTEM
                </div>
             </div>
           </div>
@@ -281,11 +281,11 @@ const WiseMandateBridge: React.FC = () => {
               <div className="space-y-4">
                 <button className="w-full py-6 rounded-3xl bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase tracking-[0.4em] text-xs transition-all shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-4 group active:scale-95">
                    <ArrowRightLeft className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700" />
-                   Convert Across Rails
+                   Command Transfer
                 </button>
                 <button className="w-full py-6 rounded-3xl bg-white hover:bg-slate-100 text-black font-black uppercase tracking-[0.4em] text-xs transition-all shadow-xl flex items-center justify-center gap-4 group active:scale-95">
-                   <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                   Fund Global Vault
+                   <Command className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                   Command Asset Movement
                 </button>
               </div>
 

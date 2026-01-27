@@ -194,7 +194,7 @@ export interface ChatMessage {
   imageBase64?: string;
   isGrounding?: boolean;
   groundingSources?: GroundingSource[];
-  agentName?: 'NEOXZ Q TEAM' | 'NEOXZ BANK AI' | 'NEOXZ AI' | 'DOMINANCE ORCHESTRATOR' | 'HARVEY AI' | 'ZAPPIER AI' | 'ORCHESTRATOR AI' | 'MARKET ANALYST';
+  agentName?: 'NEOXZ Q TEAM' | 'NEOXZ BANK AI' | 'NEOXZ AI' | 'DOMINANCE ORCHESTRATOR' | 'HARVEY AI' | 'ZAPPIER AI' | 'ORCHESTRATOR AI' | 'MARKET ANALYST' | 'SYSTEM';
 }
 
 export interface TrackedTransaction {

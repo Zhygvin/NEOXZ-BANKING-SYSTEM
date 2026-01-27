@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { ArrowUpRight, Clock, CheckCircle2, XCircle, Loader2, ArrowDownWideNarrow, ArrowUpNarrowWide, Filter } from 'lucide-react';
 import { TrackedTransaction } from '../types';
@@ -60,7 +61,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ transactions })
     <div className="p-8 rounded-[3.5rem] bg-slate-900/30 border border-slate-800 space-y-8 h-full flex flex-col">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-4">
-          <h3 className="text-xl font-black text-white uppercase tracking-tighter">Displacements</h3>
+          <h3 className="text-xl font-black text-white uppercase tracking-tighter">Commanded Asset Movements</h3>
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-black/40 px-3 py-1 rounded-lg border border-slate-800 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
             Live Feed

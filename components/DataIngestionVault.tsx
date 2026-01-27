@@ -1,9 +1,10 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   UploadCloud, FileText, X, CheckCircle2, Loader2, Database, 
   ShieldCheck, Zap, HardDrive, Share2, Video, Sparkles, 
   Play, Eye, Search, Lock, AlertTriangle, Key, ArrowRight,
-  Tornado, Trash2
+  Tornado, Trash2, Coins
 } from 'lucide-react';
 import { IngestedFile } from '../types';
 import { GoogleGenAI } from "@google/genai";
@@ -153,7 +154,7 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
           onClick={() => setActiveSubView('INGEST')}
           className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubView === 'INGEST' ? 'bg-cyan-500 text-black shadow-lg' : 'text-slate-500 hover:text-white'}`}
         >
-          Payload Ingest
+          Light Web Financial Data
         </button>
         <button 
           onClick={() => setActiveSubView('MEDIA_LAB')}
@@ -166,7 +167,7 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
       {activeSubView === 'INGEST' ? (
         <div className="bg-slate-900/40 border border-cyan-500/20 rounded-[3rem] p-10 space-y-8 shadow-3xl relative overflow-hidden backdrop-blur-3xl group transition-all hover:border-cyan-500/40">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Database className="w-48 h-48 text-cyan-500" />
+            <Coins className="w-48 h-48 text-cyan-500" />
           </div>
 
           <div className="flex items-center justify-between relative z-10">
@@ -175,13 +176,13 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
                 <UploadCloud className={`w-8 h-8 text-cyan-400 ${uploading ? 'animate-bounce' : ''}`} />
               </div>
               <div>
-                <h3 className="text-sm font-black uppercase tracking-[0.4em] text-white">Quantum Ingestion Vault</h3>
-                <span className="text-[10px] text-cyan-500 font-bold tracking-widest uppercase italic">SDS PARITY ANCHORING ACTIVE</span>
+                <h3 className="text-sm font-black uppercase tracking-[0.4em] text-white">Light Web Data Gathering</h3>
+                <span className="text-[10px] text-cyan-500 font-bold tracking-widest uppercase italic">PAYMENTS / COLLECTIONS / CURRENCIES</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
                <div className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest ${ingestedFiles.length > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-900 border-slate-800 text-slate-500'}`}>
-                 {ingestedFiles.length} PAYLOADS ANCHORED
+                 {ingestedFiles.length} FINANCIAL RECORDS GATHERED
                </div>
             </div>
           </div>
@@ -201,16 +202,16 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
               {uploading ? (
                 <>
                   <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 animate-pulse">Computing SDS Hashes...</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 animate-pulse">Streaming Financial Data...</span>
                 </>
               ) : (
                 <>
                   <div className="p-4 rounded-full bg-slate-900 text-slate-500 group-hover:text-cyan-400 transition-colors">
-                    <HardDrive className="w-8 h-8" />
+                    <Coins className="w-8 h-8" />
                   </div>
                   <div className="text-center">
-                    <p className="text-[11px] font-black text-white uppercase tracking-widest">Stage Reality Assets</p>
-                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-1 italic">Identity-linked anchoring for NE.B.RU</p>
+                    <p className="text-[11px] font-black text-white uppercase tracking-widest">Gather Financial Data</p>
+                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-1 italic">Ingest Payments, Collections & Currencies from Light Web</p>
                   </div>
                 </>
               )}
@@ -220,7 +221,7 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
           <div className="space-y-4 relative z-10 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
             {ingestedFiles.length === 0 ? (
               <div className="py-8 text-center opacity-20 italic text-[10px] font-black uppercase tracking-widest text-slate-500">
-                Vault Rails Empty
+                Data Stream Empty
               </div>
             ) : (
               ingestedFiles.map((file) => (
@@ -242,7 +243,7 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
                      <div className="flex flex-col items-end">
                         <div className="flex items-center gap-2 text-emerald-400">
                            <ShieldCheck className="w-3 h-3" />
-                           <span className="text-[9px] font-black uppercase">ANCHORED</span>
+                           <span className="text-[9px] font-black uppercase">GATHERED</span>
                         </div>
                         <span className="text-[8px] text-slate-600 font-bold mono">{file.timestamp}</span>
                      </div>
@@ -401,10 +402,10 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
       <footer className="flex items-center justify-between px-6 pt-4 border-t border-slate-900 opacity-40 hover:opacity-100 transition-opacity">
          <div className="flex items-center gap-4">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">SDS INTEGRITY: 1.000000</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">DATA INTEGRITY: 1.000000</span>
          </div>
          <div className="flex items-center gap-6">
-            <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">PH_MNL_PRODUCTION_ANCHOR</span>
+            <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">SOURCE: LIGHT_WEB</span>
          </div>
       </footer>
     </div>

@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { 
   Zap, X, ShieldCheck, Landmark, Globe, 
   HandCoins, Heart, Landmark as Bank, 
-  UserCheck, ArrowRight, Fingerprint, Loader2
+  UserCheck, ArrowRight, Fingerprint, Loader2, Lock
 } from 'lucide-react';
 
 interface QuickDeployOverlayProps {
