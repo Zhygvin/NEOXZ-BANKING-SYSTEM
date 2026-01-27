@@ -1,15 +1,44 @@
-import React, { useState } from 'react';
-/* Added missing RefreshCw and ShieldAlert imports from lucide-react */
+import React, { useState, useEffect } from 'react';
 import { Globe, ShieldCheck, Zap, Network, Smartphone, Cpu, Coins, CreditCard, Binary, FileText, ArrowUpRight, Activity, Search, Lock, ShieldX, RefreshCw, ShieldAlert } from 'lucide-react';
+import { generateFastResponse } from '../services/geminiService';
 
 const SovereignSatellitePortal: React.FC = () => {
   const [isScanning, setIsScanning] = useState(false);
+  const [logs, setLogs] = useState<string[]>([
+    "[INIT] Satellite Core Booted.",
+    "[SYNC] Tether established with NEOXZ Central Ledger.",
+    "[AUTH] Serial NE.B.RU verified against hardware hash."
+  ]);
   const serial = localStorage.getItem('neoxz_platform_serial') || 'NEOX-SAT-NULL';
 
   const triggerScan = () => {
     setIsScanning(true);
     setTimeout(() => setIsScanning(false), 2000);
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchLog = async () => {
+      if (!mounted) return;
+      try {
+        const log = await generateFastResponse(
+          "Generate a brief, cryptic, high-tech system log for a sovereign satellite node (e.g. 'Uplink verified', 'Encryption rotation', 'Ledger sync'). Max 6 words.",
+          "You are a satellite node firmware logger. Output raw log text only."
+        );
+        if (mounted && log) {
+          setLogs(prev => [`[${new Date().toLocaleTimeString([], {hour12: false})}] ${log}`, ...prev].slice(0, 7));
+        }
+      } catch (e) {
+        // Silent fail for logs
+      }
+    };
+
+    const interval = setInterval(fetchLog, 4000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -115,17 +144,9 @@ const SovereignSatellitePortal: React.FC = () => {
                </button>
             </div>
             <div className="space-y-3 font-mono text-[11px] text-slate-500 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-               {[
-                 "[INIT] Satellite Core Booted.",
-                 "[SYNC] Tether established with NEOXZ Central Ledger.",
-                 "[AUTH] Serial NE.B.RU verified against hardware hash.",
-                 "[RAIL] SignaSovereign v4.2.1 initialized successfully.",
-                 "[CAP] Promotional Abundance ($55.00) activated.",
-                 "[AML] Real-time laundering overwatch: ACTIVE.",
-                 "[NODE] 4,117 edge points reported stable heartbeat."
-               ].map((log, i) => (
-                 <div key={i} className="flex gap-4 border-b border-white/5 pb-2 animate-in slide-in-from-left-2" style={{ animationDelay: `${i * 100}ms` }}>
-                    <span className="text-indigo-500/40 shrink-0">[{i}]</span>
+               {logs.map((log, i) => (
+                 <div key={i} className="flex gap-4 border-b border-white/5 pb-2 animate-in slide-in-from-left-2">
+                    <span className="text-indigo-500/40 shrink-0">[{i.toString().padStart(2, '0')}]</span>
                     <span className="break-all">{log}</span>
                  </div>
                ))}

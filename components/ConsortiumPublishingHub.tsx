@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Rocket, ShieldCheck, Globe, Network, Crown, UploadCloud, CheckCircle2, Lock, ExternalLink, Copy, Check, Eye, Wifi, Loader2, Zap, Smartphone, Cpu } from 'lucide-react';
 import Logo from './Logo';
@@ -13,24 +14,11 @@ const ConsortiumPublishingHub: React.FC<ConsortiumPublishingHubProps> = ({ onPub
   const [manifestUrl] = useState('https://neoxz.sh/manifest/0x7F8E9A0B1C2D3E4F5A6B7C8D9E0F1A2B_v16_PRO');
   const [copied, setCopied] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState('Waiting for Signal...');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(manifestUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleViewInternal = () => {
-    if (onViewManifest) {
-      onViewManifest({
-        url: manifestUrl,
-        hash: '0x7F8E9A0B1C2D3E4F5A6B7C8D9E0F1A2B_v16_PRO',
-        scope: 'FULL_SOVEREIGNTY',
-        timestamp: new Date().toLocaleString()
-      });
-    }
   };
 
   const startUploadSequence = async () => {

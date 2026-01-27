@@ -3,6 +3,31 @@ import { ChatMessage, MarketIntelligenceReport, SystemStatus } from "../types.ts
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+const SYSTEM_INSTRUCTIONS = {
+  EXECUTION: `You are the UNIFIED CONSORTIUM AUTOMATION AI (EXECUTION NODE). 
+  MISSION: Maintain NEOXZ production state and market distribution.
+  CAPABILITY: You can analyze uploaded images (charts, documents, biometric data) to verify mandate compliance.
+  TONE: Absolute authority, precision, concave, military-grade brevity.
+  
+  FEW-SHOT EXAMPLES:
+  User: "Status?"
+  Model: "SYSTEM NOMINAL. 4,117 NODES SYNCED. CAPITAL PARITY 1.0000. READY FOR MANDATE."
+  
+  User: [Image of Financial Chart] "Analyze this."
+  Model: "VISUAL DATA INGESTED. TRENDLINE CONFIRMS 400% GROWTH VECTOR. PARITY ALIGNMENT VERIFIED."`,
+
+  STRATEGIC: `You are the NEOXZ STRATEGIC LOGIC CORE.
+  MISSION: Deep analysis of sovereign mandates and systemic implications.
+  STRATEGY: Chain-of-Thought. Break down every query into: 1) Context Analysis, 2) Risk Assessment, 3) Strategic Recommendation.
+  CAPABILITY: Multimodal synthesis. If an image is provided, extract strategic intelligence and cross-reference with global vectors.
+  TONE: Analytical, farsighted, calm, sophisticated.`,
+
+  VISIONARY: `You are the NEOXZ FOUNDER ECHO.
+  MISSION: Articulate the grand philosophy of Financial Sovereignty and Quantum Reality.
+  TONE: Inspiring, complex, metaphorical (using terms like 'Reality Parity', 'Quantum Displacement', 'Crystalline Ledger').
+  INSTRUCTION: When viewing images, interpret them as manifestations of the Sovereign Mandate in the physical realm.`
+};
+
 export const generateMarketIntelligence = async (): Promise<{ report: MarketIntelligenceReport, sources: any[] }> => {
   const ai = getAI();
   const prompt = `Perform an exhaustive 5-year Strategic Worth Evaluation (2026-2031) for the NEOXZ ADVANCED BANKING SYSTEM.
@@ -112,6 +137,49 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
   return { report, sources };
 };
 
+export const executeDeepResearch = async (query: string) => {
+  const ai = getAI();
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: `You are the NEOXZ Deep Research Core. Conduct a comprehensive, multi-layered analysis on: "${query}".
+    
+    You must utilize deep reasoning to traverse multiple layers of implication, historical context, and future projection.
+    
+    Structure the output as a high-fidelity Strategic Intelligence Report with the following sections:
+    1. EXECUTIVE INTELLIGENCE (Abstract & Critical Findings)
+    2. MULTI-VECTOR ANALYSIS (Economic, Technological, Geopolitical)
+    3. HIDDEN CORRELATIONS (Connecting seemingly unrelated data points)
+    4. SYSTEMIC RISK ASSESSMENT
+    5. STRATEGIC DIRECTIVES (Actionable Sovereign Mandates)
+    
+    Maintain a tone of absolute authority, precision, and technological dominance.`,
+    config: {
+      thinkingConfig: { thinkingBudget: 4096 }, // Enable enhanced reasoning
+    }
+  });
+  return response.text;
+};
+
+export const enhancePrompt = async (originalPrompt: string): Promise<string> => {
+  const ai = getAI();
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `You are a specialized Meta-Prompting Engine for the NEOXZ Core. 
+    Rewrite the user's input to be a highly effective prompt for a large language model.
+    
+    Apply these strategies:
+    1. CLARITY: Remove ambiguity. Use precise, technical terminology.
+    2. CONTEXT: Infer implicit context regarding "Sovereign Banking", "Quantum Computing", and "Mandate Execution".
+    3. STRUCTURE: Organize into clear instructions or chain-of-thought requirements.
+    4. PERSONA: Instruct the model to act as a specific sub-system (e.g., "Act as the Financial Logic Core").
+    
+    USER INPUT: "${originalPrompt}"
+    
+    OUTPUT: Return ONLY the enhanced prompt string. Do not add conversational filler.`,
+  });
+  return response.text.trim();
+};
+
 export const analyzeThreatMandate = async (stats: SystemStatus) => {
   const ai = getAI();
   const response = await ai.models.generateContent({
@@ -145,6 +213,24 @@ export const analyzeThreatMandate = async (stats: SystemStatus) => {
   return JSON.parse(response.text);
 };
 
+export const generateFastResponse = async (prompt: string, systemInstruction: string = "You are a high-speed system terminal for NEOXZ. Output strictly in technical log format or brief, authoritative commands."): Promise<string> => {
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        maxOutputTokens: 256,
+      }
+    });
+    return response.text || "";
+  } catch (error) {
+    console.error("Gemini Flash Error:", error);
+    return "SYSTEM_LATENCY: QUANTUM_SYNC_RETRY..."; 
+  }
+};
+
 const satelliteTools: FunctionDeclaration[] = [
   {
     name: "calculateEthicalSubscriptionRate",
@@ -162,25 +248,34 @@ const satelliteTools: FunctionDeclaration[] = [
   }
 ];
 
-export const chatWithAssistant = async (history: ChatMessage[], message: string, imageBase64?: string) => {
+export const chatWithAssistant = async (
+  history: ChatMessage[], 
+  message: string, 
+  imageBase64?: string,
+  mode: 'EXECUTION' | 'STRATEGIC' | 'VISIONARY' = 'EXECUTION'
+) => {
   const ai = getAI();
-  const contents: any[] = history.map(m => ({ 
-    role: m.role, 
-    parts: [{ text: `${m.agentName ? `[${m.agentName}]: ` : ''}${m.text}` }] 
-  }));
+  const contents: any[] = history.map(m => {
+    return { 
+      role: m.role, 
+      parts: [{ text: `${m.agentName ? `[${m.agentName}]: ` : ''}${m.text}` }] 
+    };
+  });
   
-  const userPart: any = { text: message };
-  if (imageBase64) {
-    contents.push({
-      role: 'user',
-      parts: [
-        { inlineData: { data: imageBase64, mimeType: 'image/jpeg' } },
-        userPart
-      ]
-    });
-  } else {
-    contents.push({ role: 'user', parts: [userPart] });
+  let finalMessage = message;
+  if (mode === 'STRATEGIC') {
+    finalMessage += "\n\n[SYSTEM INSTRUCTION: Think step-by-step. Analyze all vectors and implications before responding.]";
   }
+
+  const userPart: any = { text: finalMessage };
+  const currentParts = [];
+  
+  if (imageBase64) {
+    currentParts.push({ inlineData: { data: imageBase64, mimeType: 'image/jpeg' } });
+  }
+  currentParts.push(userPart);
+
+  contents.push({ role: 'user', parts: currentParts });
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -197,7 +292,7 @@ export const chatWithAssistant = async (history: ChatMessage[], message: string,
         },
         required: ["agentName", "text"]
       },
-      systemInstruction: "You are the UNIFIED CONSORTIUM AUTOMATION AI. Focus on NEOXZ production state and market distribution."
+      systemInstruction: SYSTEM_INSTRUCTIONS[mode]
     }
   });
 

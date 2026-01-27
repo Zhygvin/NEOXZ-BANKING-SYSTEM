@@ -5,6 +5,7 @@ import {
   Terminal, ShieldAlert, Loader2
 } from 'lucide-react';
 import Logo from './Logo';
+import { generateFastResponse } from '../services/geminiService';
 
 interface SystemReloadOverlayProps {
   onComplete: () => void;
@@ -24,19 +25,6 @@ const SystemReloadOverlay: React.FC<SystemReloadOverlayProps> = ({ onComplete, i
     { label: "Parity Re-Anchor", icon: <ShieldCheck className="w-5 h-5" />, sub: "Locking at 1.000000" }
   ];
 
-  const kernelLogs = [
-    "unmounting forensic modules...",
-    "flushing TCP buffers...",
-    "re-initializing Wise v3.2 production rails...",
-    "MTLS_HANDSHAKE: api-mtls.transferwise.com [OK]",
-    "verifying SDS-HASH: 0x7F8E...BALOG",
-    "synchronizing regional nodes: PH-MNL-01... anchored.",
-    "kernel.mandate: absolute legitimacy confirmed.",
-    "reloading neural impact engine...",
-    "purging Orchestrator remnant signals...",
-    "re-establishing sovereign link press.neoxz@gmail.com"
-  ];
-
   useEffect(() => {
     const sequence = async () => {
       const speed = intensity === 'SOFT_REFRESH' ? 1 : 2;
@@ -47,7 +35,15 @@ const SystemReloadOverlay: React.FC<SystemReloadOverlayProps> = ({ onComplete, i
         
         for (let j = 0; j < 3; j++) {
           await new Promise(r => setTimeout(r, 400 / speed));
-          const log = kernelLogs[Math.floor(Math.random() * kernelLogs.length)];
+          
+          let log = "Processing...";
+          try {
+             log = await generateFastResponse(
+               `Generate a single technical Linux-style kernel boot log line for process: ${steps[i].label}. Use low-level terminology (e.g. 'alloc', 'buffer', 'sigkill', 'handshake'). Max 8 words.`,
+               "You are a UNIX kernel bootloader. Output raw log text only."
+             );
+          } catch(e) { log = `[KERNEL] Executing ${steps[i].label} subprocess...`; }
+          
           setLogs(prev => [...prev, `[BUS] ${log}`]);
           setProgress(prev => Math.min(100, prev + (100 / (steps.length * 3))));
         }

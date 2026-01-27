@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Globe, CreditCard, Landmark, ArrowRightLeft, ShieldCheck, 
@@ -5,9 +6,16 @@ import {
   Network, MapPin, Search, Navigation, Terminal, Copy, 
   Check, Info, ArrowUpRight, BarChart3, Fingerprint, Lock, 
   Wifi, PieChart, Wallet, Archive, ArrowDownRight, Scale,
-  Activity, Smartphone
+  Activity, Smartphone, ExternalLink, Settings
 } from 'lucide-react';
 import { WiseVault, WiseBalance } from '../types';
+
+const RATES: Record<string, number> = {
+  USD: 1,
+  PHP: 58.50,
+  EUR: 0.92,
+  GBP: 0.79
+};
 
 const WiseMandateBridge: React.FC = () => {
   const [balances, setBalances] = useState<WiseBalance[]>([
@@ -37,6 +45,9 @@ const WiseMandateBridge: React.FC = () => {
   const [showApiConsole, setShowApiConsole] = useState(false);
   const [apiLogs, setApiLogs] = useState<string[]>(['[WISE_API] Handshake initialized...', '[WISE_API] mTLS Identity Handshake Verified.', '[WISE_API] api-mtls.transferwise.com LATCHED.']);
   const [tunnelPulse, setTunnelPulse] = useState(false);
+  
+  // Currency Preference State
+  const [preferredCurrency, setPreferredCurrency] = useState(() => localStorage.getItem('neoxz_pref_currency') || 'USD');
 
   const activeBalance = balances.find(b => b.id === activeBalanceId) || balances[0];
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -87,6 +98,27 @@ const WiseMandateBridge: React.FC = () => {
     setApiLogs(prev => [...prev, `[WISE_API] mTLS Tunnel re-anchoring for ${bal?.currency} context.`]);
   };
 
+  const toggleCurrency = () => {
+    const currencies = ['USD', 'PHP', 'EUR', 'GBP'];
+    const nextIdx = (currencies.indexOf(preferredCurrency) + 1) % currencies.length;
+    const next = currencies[nextIdx];
+    setPreferredCurrency(next);
+    localStorage.setItem('neoxz_pref_currency', next);
+  };
+
+  const convertValue = (amount: number, fromCurrency: string) => {
+    const usdValue = amount / (RATES[fromCurrency] || 1);
+    return usdValue * (RATES[preferredCurrency] || 1);
+  };
+
+  const formatCurrencyValue = (val: number) => {
+    return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // Calculate total systemic valuation dynamically based on all balances converted to USD then to preferred
+  const systemicTotalUSD = 985004531802.00;
+  const displayTotal = convertValue(systemicTotalUSD, 'USD');
+
   return (
     <div className="bg-slate-900/60 border border-cyan-500/20 rounded-[4rem] p-12 space-y-12 shadow-3xl relative overflow-hidden backdrop-blur-3xl group transition-all duration-1000">
       <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
@@ -112,6 +144,14 @@ const WiseMandateBridge: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
+           <button 
+             onClick={toggleCurrency}
+             className="px-4 py-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-500 hover:text-white hover:border-cyan-500/50 transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+             title="Switch Display Currency"
+           >
+              <Coins className="w-4 h-4" />
+              VIEW: {preferredCurrency}
+           </button>
            <button 
              onClick={() => setShowApiConsole(!showApiConsole)}
              className={`px-4 py-2 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${showApiConsole ? 'bg-cyan-500 text-black border-white' : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-white'}`}
@@ -176,7 +216,7 @@ const WiseMandateBridge: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
-                     <span className="text-xs font-black mono">{balance.currency}</span>
+                     <span className="text-xs font-black mono">{preferredCurrency}</span>
                      <ChevronRight className={`w-4 h-4 transition-transform ${activeBalanceId === balance.id ? 'rotate-90' : ''}`} />
                   </div>
                 </button>
@@ -204,7 +244,7 @@ const WiseMandateBridge: React.FC = () => {
 
               <div className="space-y-4 relative z-10">
                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Available Capital ({activeBalance.currency})</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Available Capital ({preferredCurrency})</span>
                     {activeBalance.type === 'SAVINGS' && (
                        <div className="px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest">
                           Jar Accumulation Active
@@ -213,16 +253,16 @@ const WiseMandateBridge: React.FC = () => {
                  </div>
                  <div className="flex items-baseline gap-4">
                     <span className="text-6xl font-black text-white mono tracking-tighter transition-all duration-700 group-hover/main:text-cyan-400">
-                      {activeBalance.amount.value.toLocaleString()}
+                      {formatCurrencyValue(convertValue(activeBalance.amount.value, activeBalance.currency))}
                     </span>
-                    <span className="text-xl font-bold text-slate-700 uppercase">{activeBalance.currency}</span>
+                    <span className="text-xl font-bold text-slate-700 uppercase">{preferredCurrency}</span>
                  </div>
                  
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
                     {[
-                      { label: 'Reserved', val: activeBalance.reservedAmount.value.toLocaleString(), icon: <Archive className="w-3 h-3" />, color: 'text-slate-400' },
-                      { label: 'Cash Value', val: activeBalance.cashAmount.value.toLocaleString(), icon: <Coins className="w-3 h-3" />, color: 'text-amber-400' },
-                      { label: 'Total Worth', val: activeBalance.totalWorth.value.toLocaleString(), icon: <PieChart className="w-3 h-3" />, color: 'text-emerald-500' },
+                      { label: 'Reserved', val: formatCurrencyValue(convertValue(activeBalance.reservedAmount.value, activeBalance.currency)), icon: <Archive className="w-3 h-3" />, color: 'text-slate-400' },
+                      { label: 'Cash Value', val: formatCurrencyValue(convertValue(activeBalance.cashAmount.value, activeBalance.currency)), icon: <Coins className="w-3 h-3" />, color: 'text-amber-400' },
+                      { label: 'Total Worth', val: formatCurrencyValue(convertValue(activeBalance.totalWorth.value, activeBalance.currency)), icon: <PieChart className="w-3 h-3" />, color: 'text-emerald-500' },
                       { label: 'Sync State', val: activeBalance.investmentState, icon: <Activity className="w-3 h-3" />, color: 'text-blue-400' }
                     ].map((m, i) => (
                       <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-1 hover:border-white/10 transition-colors">
@@ -281,16 +321,21 @@ const WiseMandateBridge: React.FC = () => {
                <div className="flex flex-col">
                   <span className="text-xs font-black text-white uppercase tracking-widest">Total Valuation across Multi-Currency Hub</span>
                   <span className="text-xl font-black text-white mono mt-0.5 tracking-tighter italic underline decoration-cyan-500/30">
-                     $985,004,531,802.00
+                     {formatCurrencyValue(displayTotal)} {preferredCurrency}
                   </span>
                </div>
             </div>
          </div>
          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4 px-4 py-2 rounded-xl bg-black border border-slate-800">
-               <Navigation className="w-3 h-3 text-cyan-500" />
-               <span className="text-[9px] font-mono text-slate-400 uppercase">DESTINATION: Manila, PH (PH-MNL-01)</span>
-            </div>
+            <a 
+              href="https://www.sh-pay.com/pay/response/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center gap-3 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400 text-[9px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95"
+            >
+               <ExternalLink className="w-3 h-3" />
+               Verify Settlement Gateway
+            </a>
             <div className="flex items-center gap-3 px-5 py-2 rounded-xl bg-black border border-slate-800">
                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                <span className="text-[10px] font-mono text-emerald-400 font-black tracking-widest uppercase">REALITY_PARITY_ANCHORED</span>

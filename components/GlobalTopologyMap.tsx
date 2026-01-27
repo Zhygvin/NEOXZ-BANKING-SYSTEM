@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { Globe, Network, Radio, ShieldCheck, Zap, Activity, Server, Cpu } from 'lucide-react';
+import { generateFastResponse } from '../services/geminiService';
 
 interface EdgeNode {
   id: string;
@@ -58,15 +58,24 @@ const GlobalTopologyMap: React.FC = () => {
           toY: nodes[toIdx].y,
         };
         setPulses(prev => [...prev, newPulse].slice(-15));
-        
-        const logMsg = `[SYNC] Node ${nodes[fromIdx].id} → ${nodes[toIdx].id} | Data Chunk: ${Math.floor(Math.random() * 512)}MB`;
-        setNodeLogs(prev => [logMsg, ...prev].slice(0, 5));
       }
     }, 1200);
+
+    // AI-Powered Network Logs (Flash)
+    const logInterval = setInterval(async () => {
+       try {
+         const log = await generateFastResponse(
+           "Generate a technical network traffic log entry between two global cities. Format: '[ROUTING] City1 -> City2 | Details'. Max 10 words.",
+           "You are a global network traffic monitor. Output raw log text only."
+         );
+         setNodeLogs(prev => [log, ...prev].slice(0, 5));
+       } catch (e) {}
+    }, 4000);
 
     return () => {
       clearInterval(nodeInterval);
       clearInterval(pulseInterval);
+      clearInterval(logInterval);
     };
   }, [nodes]);
 

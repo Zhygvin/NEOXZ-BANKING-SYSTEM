@@ -11,6 +11,18 @@ export interface ExecutionStep {
   deltaMs?: number;
 }
 
+export interface ProtocolTask {
+  id: string;
+  title: string;
+  description?: string;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'STANDARD';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED';
+  dueDate: string;
+  createdAt: string;
+  assignee?: string;
+  tags?: string[];
+}
+
 export interface GroundingSource {
   title: string;
   uri: string;

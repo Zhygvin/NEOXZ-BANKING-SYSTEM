@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { Terminal, ShieldCheck, Zap, Cloud, Cpu, Loader2, Command, Key, Fingerprint } from 'lucide-react';
 
@@ -15,6 +16,7 @@ const SovereignCloudTerminal: React.FC<SovereignCloudTerminalProps> = ({ onCompl
     "gcloud auth login press.neoxz@gmail.com --no-launch-browser",
     "gcloud services enable generativeai.googleapis.com cloudbilling.googleapis.com",
     "export NEOXZ_MANDATE_KEY=$(aistudio get-secret key)",
+    "curl -X POST https://pay.google.com/business/console/payment/BCR2DN4TU7BMDMDU/integrate --data 'auto_link=true'",
     "node ./scripts/neural_handshake.js --identity=press.neoxz@gmail.com",
     "gcloud iam service-accounts create neoxz-orchestrator",
     "gcloud projects add-iam-policy-binding --role=roles/editor",

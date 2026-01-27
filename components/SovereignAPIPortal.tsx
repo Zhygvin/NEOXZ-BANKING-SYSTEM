@@ -4,7 +4,7 @@ import {
   Code, Globe, ShieldCheck, Zap, Terminal, 
   Braces, Database, Key, Radio, Network, 
   Lock, ArrowRight, Copy, Check, ExternalLink,
-  Cpu, Activity, Landmark, Share2, Box, Fingerprint
+  Cpu, Activity, Landmark, Share2, Box, Fingerprint, Webhook
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -192,7 +192,6 @@ const SovereignAPIPortal: React.FC<SovereignAPIPortalProps> = ({ onClose, apiKey
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="p-10 rounded-[3.5rem] bg-emerald-500/5 border border-emerald-500/10 space-y-6 shadow-2xl">
                          <div className="p-4 rounded-2xl bg-emerald-500 text-black w-fit shadow-xl">
-                            {/* Added missing Fingerprint icon import above to resolve error here */}
                             <Fingerprint className="w-10 h-10" />
                          </div>
                          <h4 className="text-xl font-black text-white uppercase tracking-wider">Master Key Authorization</h4>
@@ -208,6 +207,37 @@ const SovereignAPIPortal: React.FC<SovereignAPIPortalProps> = ({ onClose, apiKey
                          <p className="text-xs font-medium text-slate-400 leading-relaxed">
                             SDS (Sovereign Distributed Storage) performs a tripartite check on every displacement request across 3 separate global node regions.
                          </p>
+                      </div>
+                   </div>
+
+                   <div className="p-10 rounded-[3.5rem] bg-black/60 border border-slate-800 space-y-6">
+                      <div className="flex items-center gap-4">
+                         <div className="p-3 rounded-2xl bg-white/5 text-purple-400 border border-white/10">
+                            <Webhook className="w-6 h-6" />
+                         </div>
+                         <h4 className="text-lg font-black text-white uppercase tracking-wider">Active Webhooks</h4>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="p-6 rounded-2xl bg-slate-950 border border-slate-900 flex items-center justify-between">
+                           <div className="flex flex-col gap-1">
+                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Settlement Response Gateway</span>
+                              <code className="text-xs font-mono text-purple-400">https://www.sh-pay.com/pay/response/</code>
+                           </div>
+                           <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
+                              LISTENING
+                           </div>
+                        </div>
+
+                        <div className="p-6 rounded-2xl bg-slate-950 border border-slate-900 flex items-center justify-between">
+                           <div className="flex flex-col gap-1">
+                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Merchant Automation</span>
+                              <code className="text-xs font-mono text-cyan-400">BCR2DN4TU7BMDMDU (Google Pay)</code>
+                           </div>
+                           <div className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-[8px] font-black uppercase tracking-widest border border-cyan-500/20">
+                              LINKED
+                           </div>
+                        </div>
                       </div>
                    </div>
                 </div>

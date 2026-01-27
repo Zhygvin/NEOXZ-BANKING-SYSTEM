@@ -3,17 +3,18 @@ import {
   UploadCloud, FileText, X, CheckCircle2, Loader2, Database, 
   ShieldCheck, Zap, HardDrive, Share2, Video, Sparkles, 
   Play, Eye, Search, Lock, AlertTriangle, Key, ArrowRight,
-  Tornado
+  Tornado, Trash2
 } from 'lucide-react';
 import { IngestedFile } from '../types';
 import { GoogleGenAI } from "@google/genai";
 
 interface DataIngestionVaultProps {
   onUpload: (files: IngestedFile[]) => void;
+  onDelete?: (id: string) => void;
   ingestedFiles: IngestedFile[];
 }
 
-const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, ingestedFiles }) => {
+const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDelete, ingestedFiles }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activeSubView, setActiveSubView] = useState<'INGEST' | 'MEDIA_LAB'>('INGEST');
@@ -25,6 +26,9 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, inges
   const [videoStatus, setVideoStatus] = useState('');
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
+
+  // Deletion Confirmation State
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   useEffect(() => {
     const checkKey = async () => {
@@ -67,6 +71,13 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, inges
     
     onUpload(newFiles);
     setUploading(false);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget && onDelete) {
+      onDelete(deleteTarget);
+      setDeleteTarget(null);
+    }
   };
 
   const generateVideo = async () => {
@@ -235,8 +246,11 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, inges
                         </div>
                         <span className="text-[8px] text-slate-600 font-bold mono">{file.timestamp}</span>
                      </div>
-                     <button className="p-2 rounded-lg bg-slate-900 hover:bg-rose-500/10 hover:text-rose-500 transition-all border border-slate-800">
-                        <X className="w-3 h-3" />
+                     <button 
+                        onClick={() => setDeleteTarget(file.id)}
+                        className="p-2 rounded-lg bg-slate-900 hover:bg-rose-500/10 hover:text-rose-500 transition-all border border-slate-800"
+                     >
+                        <Trash2 className="w-3 h-3" />
                      </button>
                   </div>
                 </div>
@@ -325,7 +339,6 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, inges
                  {isGeneratingVideo ? (
                     <div className="flex flex-col items-center gap-6 p-8 text-center">
                        <div className="w-24 h-24 rounded-full border-4 border-purple-500/20 flex items-center justify-center relative">
-                          {/* Add missing Tornado icon import from lucide-react */}
                           <Tornado className="w-12 h-12 text-purple-400 animate-spin" />
                           <div className="absolute inset-0 border-t-4 border-purple-500 rounded-full animate-spin"></div>
                        </div>
@@ -349,6 +362,37 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, inges
                        <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Command...</p>
                     </div>
                  )}
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[6000] bg-black/90 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-200">
+           <div className="bg-slate-900 border border-rose-500/30 rounded-[3rem] p-10 max-w-md w-full shadow-[0_0_50px_rgba(244,63,94,0.15)] flex flex-col items-center text-center space-y-6 transform animate-in zoom-in-95">
+              <div className="p-6 rounded-full bg-rose-500/10 border border-rose-500/20">
+                 <Trash2 className="w-12 h-12 text-rose-500" />
+              </div>
+              <div className="space-y-2">
+                 <h4 className="text-xl font-black text-white uppercase tracking-wider">Confirm Incineration</h4>
+                 <p className="text-xs text-slate-400 font-medium">
+                   This action will permanently scrub this payload from the Staging Vault. The data cannot be recovered once incinerated.
+                 </p>
+              </div>
+              <div className="flex gap-4 w-full pt-4">
+                 <button 
+                   onClick={() => setDeleteTarget(null)}
+                   className="flex-1 py-4 rounded-2xl bg-slate-800 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-700 transition-all"
+                 >
+                   Cancel
+                 </button>
+                 <button 
+                   onClick={confirmDelete}
+                   className="flex-1 py-4 rounded-2xl bg-rose-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-rose-500 transition-all shadow-lg shadow-rose-500/20"
+                 >
+                   Confirm Deletion
+                 </button>
               </div>
            </div>
         </div>

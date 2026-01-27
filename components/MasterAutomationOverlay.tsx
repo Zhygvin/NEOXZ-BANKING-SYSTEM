@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Zap, Activity, Globe, Cpu, Loader2, Network, 
@@ -18,7 +19,7 @@ const MasterAutomationOverlay: React.FC<MasterAutomationOverlayProps> = ({ onCom
 
   const phases = [
     { label: "Identity Parity Sync", icon: <Fingerprint />, sub: "Linking press.neoxz@gmail.com", color: "text-blue-400" },
-    { label: "API Rail Provisioning", icon: <Code />, sub: "Enforcing Wise Production mTLS", color: "text-cyan-400" },
+    { label: "Merchant Automation", icon: <Code />, sub: "BCR2DN4TU7BMDMDU", color: "text-cyan-400" },
     { label: "Agent Consensus", icon: <Users />, sub: "Unified Consortium Alignment", color: "text-indigo-400" },
     { label: "Reality Check", icon: <Globe />, sub: "4,117 Nodes Parity Lock", color: "text-emerald-400" },
     { label: "Global Settlement", icon: <Landmark />, sub: "Displacing $985B Systemic Assets", color: "text-amber-400" }
@@ -27,13 +28,18 @@ const MasterAutomationOverlay: React.FC<MasterAutomationOverlayProps> = ({ onCom
   const subLogs = [
     "Establishing Google Cloud identity handshake...",
     "Injecting mTLS certificates into hardware buffers...",
-    "Routing production subdomain: api-mtls.transferwise.com...",
+    "Automating Merchant ID: BCR2DN4TU7BMDMDU...",
+    "Verifying Google Pay Business Console Link...",
+    "Routing production subdomain: api-mtls.neoxz-core.sh...",
     "Orchestrating agents: NEOXZ, HARVEY, Q-TEAM synchronized.",
     "Performing deep forensic mesh scan...",
-    "Verifying 1:1 value parity across PH-MNL-01 primary hub...",
+    "Compiling Sovereign Dashboard Assets...",
+    "Uploading Sovereign Interface to Global Edge...",
+    "Verifying Dashboard Integrity via SDS...",
     "Unfreezing $985B systemic capital core...",
-    "Displacing prosperity vectors to anchored recipients...",
-    "Finalizing SDS Immutability Decree...",
+    "Anchoring Sole Beneficiary: NE.B.RU...",
+    "Propagating Reality Parity 1.0000...",
+    "DASHBOARD_UPLOAD_COMPLETE: 100%",
     "MANDATE MANIFESTED PERMANENTLY."
   ];
 
@@ -45,11 +51,19 @@ const MasterAutomationOverlay: React.FC<MasterAutomationOverlayProps> = ({ onCom
         setPhase(i);
         setLogs(prev => [...prev, `[INIT] ${phases[i].label} sequence starting...`]);
         
-        for (let j = 0; j < 2; j++) {
+        for (let j = 0; j < 3; j++) {
           await new Promise(r => setTimeout(r, 600 * speed));
-          const log = subLogs[Math.min(subLogs.length - 1, i * 2 + j)];
-          setLogs(prev => [...prev, `[CMD] ${log}`]);
-          setProgress(prev => prev + (100 / (phases.length * 2)));
+          // Distribute sublogs roughly across phases
+          const logIndex = Math.min(subLogs.length - 1, Math.floor((i / phases.length) * subLogs.length) + j);
+          const log = subLogs[logIndex];
+          
+          // Avoid duplicate adjacent logs if math maps to same index
+          setLogs(prev => {
+             if (prev[prev.length - 1]?.includes(log)) return prev;
+             return [...prev, `[CMD] ${log}`];
+          });
+
+          setProgress(prev => Math.min(100, prev + (100 / (phases.length * 3))));
           
           if (Math.random() > 0.5) {
             setIsGlitching(true);
@@ -61,7 +75,7 @@ const MasterAutomationOverlay: React.FC<MasterAutomationOverlayProps> = ({ onCom
       }
 
       setProgress(100);
-      setLogs(prev => [...prev, '[FIN] ALL SYSTEMS REPORT ABSOLUTE ALIGNMENT.', '[FIN] REALITY ANCHORED AT QUANTUM SPEED.']);
+      setLogs(prev => [...prev, '[FIN] MERCHANT AUTOMATION COMPLETE.', '[FIN] REALITY ANCHORED AT QUANTUM SPEED.']);
       await new Promise(r => setTimeout(r, 1000));
       onComplete();
     };

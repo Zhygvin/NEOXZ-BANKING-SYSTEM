@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Cpu, RefreshCw, ShieldCheck, Activity, 
@@ -197,6 +198,17 @@ const QuantumProcessor: React.FC<QuantumProcessorProps> = ({ onExecute, isExecut
                 <Blocks className="w-5 h-5" />
               </div>
             ))}
+         </div>
+
+         {/* Central Quantum Parity Core */}
+         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-2 flex items-center justify-center z-20 transition-all duration-1000 ${isExecuting ? 'border-cyan-400 bg-cyan-900/20 shadow-[0_0_150px_rgba(34,211,238,0.6)] scale-110' : 'border-white/5 bg-black/40'}`}>
+            <div className={`absolute inset-0 rounded-full border border-dashed transition-all duration-[3000ms] ${isExecuting ? 'border-cyan-500/50 animate-[spin_10s_linear_infinite]' : 'border-white/10'}`}></div>
+            <Atom className={`w-10 h-10 transition-all duration-1000 ${isExecuting ? 'text-white animate-spin-slow drop-shadow-[0_0_10px_rgba(34,211,238,1)]' : 'text-slate-700'}`} />
+            {isExecuting && (
+              <div className="absolute -bottom-8 text-[8px] font-black text-cyan-400 uppercase tracking-widest animate-pulse whitespace-nowrap">
+                Parity Alignment: LOCKED
+              </div>
+            )}
          </div>
 
          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-black/80 border border-white/10 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 backdrop-blur-md">

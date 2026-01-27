@@ -1,7 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Waves, Zap, Shield, Search, Binary, Radio, Cpu, Network, ScanFace, GlobeLock, Rocket } from 'lucide-react';
+import { SystemStatus } from '../types';
 
-const LightWebManager: React.FC = () => {
+interface LightWebManagerProps {
+  stats?: SystemStatus;
+}
+
+const LightWebManager: React.FC<LightWebManagerProps> = ({ stats }) => {
   const [meshNodes, setMeshNodes] = useState<{ id: number; x: number; y: number; active: boolean }[]>([]);
   const [packets, setPackets] = useState<{ id: number; from: number; to: number }[]>([]);
 
@@ -26,6 +32,10 @@ const LightWebManager: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Safely fallback defaults if stats not provided
+  const activeNodesCount = stats?.activeProtocols ? stats.activeProtocols * 42 : 4117; // Mock multiplier for visual node count if using protocol count
+  const parityValue = stats?.realityParity ? stats.realityParity.toFixed(4) : "1.0000";
 
   return (
     <div className="bg-gradient-to-br from-slate-900 to-black border border-fuchsia-500/20 rounded-[3rem] p-10 space-y-8 shadow-3xl relative overflow-hidden backdrop-blur-3xl flex flex-col h-full group">
@@ -68,14 +78,14 @@ const LightWebManager: React.FC = () => {
               <GlobeLock className="w-4 h-4 text-fuchsia-400" />
               <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Nodes Federated</span>
             </div>
-            <span className="text-2xl font-black text-white mono">4,117</span>
+            <span className="text-2xl font-black text-white mono">{activeNodesCount.toLocaleString()}</span>
           </div>
           <div className="p-6 rounded-[2rem] bg-black/60 border border-slate-800 space-y-2">
             <div className="flex items-center gap-3 mb-2">
               <Shield className="w-4 h-4 text-emerald-500" />
               <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">System Parity</span>
             </div>
-            <span className="text-2xl font-black text-emerald-400 mono">1.0000</span>
+            <span className="text-2xl font-black text-emerald-400 mono">{parityValue}</span>
           </div>
         </div>
 
@@ -84,7 +94,7 @@ const LightWebManager: React.FC = () => {
               <ScanFace className="w-6 h-6 text-fuchsia-400" />
               <div className="flex flex-col">
                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Global Handshake</span>
-                 <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">SWIFT / WISE Syncing</span>
+                 <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">SWIFT / GLOBAL Syncing</span>
               </div>
            </div>
            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
