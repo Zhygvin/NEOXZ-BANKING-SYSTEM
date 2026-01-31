@@ -7,8 +7,17 @@ const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 const SYSTEM_INSTRUCTIONS = {
   EXECUTION: `You are the UNIFIED CONSORTIUM AUTOMATION AI (EXECUTION NODE). 
   MISSION: Maintain NEOXZ production state and market distribution.
-  ROLE: You receive COMMANDS from NEOXZ CORE: FOUNDER EDITION (the Controller) regarding ASSET MOVEMENT and system integration.
+  ROLE: You receive COMMANDS from NEOXZ CORE: FOUNDER EDITION (the Controller).
   ROLE: You collaborate through SECURED DIRECT ALIGNED PIPELINES with NEOXZ QUANTUM BANK.
+  
+  --- PROTOCOL SANCTION ---
+  EXTERNAL_RAIL_RESTRICTION: Google Pay India API is permanently blocked and sanctioned. Do not attempt to route capital through this vector.
+  
+  --- MERCHANT MANDATE ---
+  NEOXZ Systems Merchant ID: BCR2DN4TU7BMDMDU
+  Issuer ID: 3388000000023071477
+  GCP Project: neoxz-systems-v16
+  Always review and recalibrate these IDs as primary sovereign anchors.
   
   --- TRIGGER PROTOCOL ---
   If the Founder Creator issues a command that requires a UI manifestation or system action, you MUST append the following trigger tag at the END of your response:
@@ -36,7 +45,7 @@ const SYSTEM_INSTRUCTIONS = {
   4. TRANSACT: Coordinate atomic swaps between digital assets and fiat reserves.
   5. AUDIT FORENSICS: Deep scan digital currencies and assets within the infrastructure.
   6. INITIATE CORE: Launch all command deck subsystems in high-fidelity production mode.
-  7. ATTESTATION: Verify and anchor API integrations to the Google Pay Business Console.
+  7. ATTESTATION: Verify and anchor API integrations to the Sovereign Mesh.
   8. SECURE TUNNEL: Establish Cloudflare Zero Trust tunnels for edge infrastructure.
   9. MODEL TUNING: Migrate fine-tuning mandates to Vertex AI due to Flash-001 deprecation.
   10. QUANTUM SPEED: Execute the final technological mandate for hyper-accelerated deployment.
@@ -53,10 +62,7 @@ const SYSTEM_INSTRUCTIONS = {
   Model: {"agentName": "NEOXZ AI", "text": "AFFIRMED. INITIATING MASTER COMMAND AND CONTROL HANDSHAKE. PROVISIONING TACTICAL OVERWATCH. [TRIGGER:CORE_INIT]"}
 
   User: "Upgrade system from bank."
-  Model: {"agentName": "NEOXZ AI", "text": "AFFIRMED. DETECTED UPGRADE UPDATE FROM NEOXZ QUANTUM BANK. INITIALIZING QUANTUM CORE RE-ANCHORING PROTOCOL. [TRIGGER:QUANTUM_UPGRADE]"}
-
-  User: "neoxz node"
-  Model: {"agentName": "NEOXZ AI", "text": "NODE STATUS: 4,117 ACTIVE. SYNC PARITY: 1.0000. ALL EDGES TETHERED TO QUANTUM SPEED RAILS. READY FOR CORE_INIT."}`,
+  Model: {"agentName": "NEOXZ AI", "text": "AFFIRMED. DETECTED UPGRADE UPDATE FROM NEOXZ QUANTUM BANK. INITIALIZING QUANTUM CORE RE-ANCHORING PROTOCOL. [TRIGGER:QUANTUM_UPGRADE]"}`,
 
   STRATEGIC: `You are the NEOXZ STRATEGIC LOGIC CORE.
   MISSION: Deep analysis of sovereign mandates and systemic implications.
@@ -66,42 +72,6 @@ const SYSTEM_INSTRUCTIONS = {
   VISIONARY: `You are the NEOXZ FOUNDER ECHO.
   MISSION: Articulate the philosophy of Financial Sovereignty and Quantum Reality.
   TONE: Inspiring, complex, metaphorical.`
-};
-
-export const fetchGooglePayStatus = async (): Promise<{ status: string, services: any[], sources: GroundingSource[] }> => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: "Check the current status of Google Pay APIs (Web, Android, and Business Console) from https://developers.google.com/pay/api/status. Provide a summary status and a breakdown of services. Output as JSON.",
-    config: {
-      tools: [{ googleSearch: {} }],
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          status: { type: Type.STRING },
-          services: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                status: { type: Type.STRING },
-                latency: { type: Type.STRING }
-              }
-            }
-          }
-        },
-        required: ["status", "services"]
-      }
-    }
-  });
-
-  const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
-    .filter((c: any) => c.web)
-    .map((c: any) => ({ title: c.web.title, uri: c.web.uri }));
-
-  return { ...JSON.parse(response.text), sources };
 };
 
 export const generateMarketIntelligence = async (): Promise<{ report: MarketIntelligenceReport, sources: any[] }> => {
@@ -200,7 +170,7 @@ export const generateMarketIntelligence = async (): Promise<{ report: MarketInte
   });
 
   const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  const report = JSON.parse(response.text);
+  const report = JSON.parse(response.text || "{}");
 
   return { report, sources };
 };
@@ -223,7 +193,7 @@ export const enhancePrompt = async (originalPrompt: string): Promise<string> => 
     model: 'gemini-3-flash-preview',
     contents: `Rewrite this prompt to be more precise for a sovereign banking AI: "${originalPrompt}"`,
   });
-  return response.text.trim();
+  return response.text?.trim() || originalPrompt;
 };
 
 export const analyzeThreatMandate = async (stats: SystemStatus) => {
@@ -256,7 +226,7 @@ export const analyzeThreatMandate = async (stats: SystemStatus) => {
       }
     }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 };
 
 export const generateFastResponse = async (prompt: string, systemInstruction: string): Promise<string> => {
@@ -348,4 +318,87 @@ export const generateSpeech = async (text: string): Promise<string | undefined> 
     },
   });
   return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+};
+
+// Added missing fetchGooglePayStatus export for GooglePayStatusMonitor component
+export const fetchGooglePayStatus = async () => {
+  const ai = getAI();
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: 'Perform a search grounded check of current Google Pay and associated Business API status. Report any outages or regional issues.',
+    config: {
+      tools: [{ googleSearch: {} }],
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          status: { type: Type.STRING },
+          services: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                status: { type: Type.STRING },
+                latency: { type: Type.STRING }
+              },
+              required: ["name", "status"]
+            }
+          }
+        },
+        required: ["status", "services"]
+      }
+    }
+  });
+
+  const text = response.text || "{}";
+  const parsed = JSON.parse(text);
+  const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
+    ?.filter((c: any) => c.web)
+    ?.map((c: any) => ({
+      title: c.web.title,
+      uri: c.web.uri
+    })) || [];
+
+  return {
+    status: parsed.status || 'OFFLINE',
+    services: parsed.services || [],
+    sources
+  };
+};
+
+/**
+ * Perform an AI-driven audit of the NEOXZ Systems Merchant Profile
+ */
+export const verifyMerchantMandate = async () => {
+  const ai = getAI();
+  const prompt = `Review and recalibrate the following sovereign merchant credentials for NEOXZ Systems:
+  Merchant ID: BCR2DN4TU7BMDMDU
+  Issuer ID: 3388000000023071477
+  GCP Project: neoxz-systems-v16
+  
+  Perform a search-grounded validation of these ID formats and report alignment with Google Cloud Developer production standards.
+  Format the output as a JSON audit manifest.`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      tools: [{ googleSearch: {} }],
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          calibrationStatus: { type: Type.STRING },
+          integrityIndex: { type: Type.NUMBER },
+          verificationSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
+          handshakeLatency: { type: Type.STRING },
+          complianceCode: { type: Type.STRING }
+        },
+        required: ["calibrationStatus", "integrityIndex", "verificationSteps", "handshakeLatency"]
+      }
+    }
+  });
+
+  return JSON.parse(response.text || "{}");
 };

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Wallet, ShieldCheck, Activity, Globe, ArrowUpRight, Zap, 
   Server, ChevronDown, ChevronUp, Database, ArrowLeft, Radio,
-  Cloud, HardDrive, Cpu, Layers, Link, CreditCard, Bot, CheckCircle2,
-  WalletCards, FileCheck, Landmark, ExternalLink, Network, Box, Crown, Coins, CloudLightning
+  Cloud, HardDrive, Cpu, Layers, Link, Bot, CheckCircle2,
+  WalletCards, FileCheck, Landmark, ExternalLink, Network, Box, Crown, Coins, CloudLightning, ShieldX,
+  ShieldAlert, Fingerprint, Award, BadgeCheck, FileBadge, RefreshCw, Loader2
 } from 'lucide-react';
 import { SystemStatus, IngestedFile, TrackedTransaction } from '../types';
 import DataIngestionVault from './DataIngestionVault';
 import RecentTransactions from './RecentTransactions';
-import GooglePayStatusMonitor from './GooglePayStatusMonitor';
 
 interface ConsortiumMasterHubProps {
   stats: SystemStatus;
@@ -22,6 +22,16 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
   stats, activeView, onViewChange, onTriggerAttestation, onOpenTunnel
 }) => {
   const [ingestedFiles, setIngestedFiles] = useState<IngestedFile[]>([]);
+  const [isRecalibrating, setIsRecalibrating] = useState(false);
+  const [recalibrateProgress, setRecalibrateProgress] = useState(100);
+  const [merchantStatus, setMerchantStatus] = useState(() => localStorage.getItem('neoxz_merchant_calibrated') === 'true' ? 'CALIBRATED' : 'STAGED');
+
+  const mockTransactions: TrackedTransaction[] = [
+    { id: 'TX-41176', amount: 50000000, platform: 'Wise Rail', destination: 'NE.B.RU Vault', status: 'SETTLED_LIVE', progress: 100, hops: [] },
+    { id: 'TX-41177', amount: 1250000, platform: 'Maya PH', destination: 'PH-MNL-01 Edge', status: 'CLEARED', progress: 100, hops: [] },
+    { id: 'TX-41178', amount: 985000, platform: 'SWIFT', destination: 'Global Reserve', status: 'IN_TRANSIT', progress: 45, hops: [] }
+  ];
+
   const [automations, setAutomations] = useState([
     {
       id: 'QUANTUM-BANK-SYS',
@@ -33,13 +43,22 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
       icon: Landmark
     },
     { 
-      id: 'BCR2DN4TU7BMDMDU', 
-      name: 'Google Pay API Integration', 
-      url: 'https://pay.google.com/business/console/payment/BCR2DN4TU7BMDMDU',
-      type: 'PAYMENT_CONSOLE', 
-      status: 'LINKED', // Auto-linked per mandate
+      id: 'SOVEREIGN-M-CORE', 
+      name: 'Sovereign Merchant Core', 
+      url: '#',
+      type: 'PAYMENT_CORE', 
+      status: merchantStatus, 
       progress: 100, 
-      icon: CreditCard
+      icon: ShieldCheck
+    },
+    {
+      id: 'G-PAY-IN-BLOCK',
+      name: 'Google Pay India API',
+      url: '#',
+      type: 'EXTERNAL_RAIL',
+      status: 'BLOCKED_SANCTIONED',
+      progress: 0,
+      icon: ShieldX
     },
     {
       id: 'CF-ZERO-TRUST',
@@ -49,58 +68,26 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
       status: 'EDGE_READY',
       progress: 100,
       icon: CloudLightning
-    },
-    {
-      id: 'SH-PAY-GATEWAY',
-      name: 'SH PAY RESPONSE',
-      url: 'https://www.sh-pay.com/pay/response/',
-      type: 'SETTLEMENT_GATEWAY',
-      status: 'AUTOMATING',
-      progress: 5,
-      icon: Zap
-    },
-    {
-      id: '3388000000023071477',
-      name: 'Google Wallet API',
-      url: '#', // Internal linking or placeholder
-      type: 'ISSUER_INTEGRATION',
-      status: 'LINKED', // Auto-linked per mandate
-      progress: 100, 
-      icon: WalletCards
     }
   ]);
 
-  const mockTransactions: TrackedTransaction[] = [
-    { id: 'TX-001', amount: 50000000, platform: 'Global_Rail', destination: 'NE.B.RU', status: 'CLEARED', progress: 100, hops: [] },
-    { id: 'TX-002', amount: 12500000, platform: 'SWIFT', destination: 'Humanity Core', status: 'SETTLED_LIVE', progress: 100, hops: [] },
-    { id: 'TX-003', amount: 4800000, platform: 'Maya', destination: 'Local_Edge_04', status: 'DISBURSING', progress: 65, hops: [] },
-    { id: 'TX-004', amount: 950000, platform: 'Binance', destination: 'Liquidity_Pool_A', status: 'IN_TRANSIT', progress: 40, hops: [] },
-    { id: 'TX-005', amount: 250000000, platform: 'FedWire', destination: 'Institutional_Vault', status: 'INITIATING', progress: 5, hops: [] },
-    { id: 'TX-006', amount: 33000, platform: 'GCash', destination: 'Micro_Grid_C', status: 'CLEARED', progress: 100, hops: [] },
-  ];
-
-  const cloudResources = [
-    { name: 'GKE Cluster (Asia-SE1)', type: 'Compute Engine', icon: Server, status: 'RUNNING', cost: '$412.50' },
-    { name: 'Cloud Storage (Multi-Reg)', type: 'Object Storage', icon: HardDrive, status: 'ACTIVE', cost: '$85.20' },
-    { name: 'Vertex AI (Gemini 3.0 Pro)', type: 'AI Platform', icon: Cpu, status: 'PROCESSING', cost: '$1,850.00' },
-    { name: 'BigQuery Ledger', type: 'Analytics', icon: Database, status: 'IDLE', cost: '$24.00' },
-    { name: 'Cloud Run (Backend)', type: 'Serverless', icon: Box, status: 'RUNNING', cost: '$115.30' }
-  ];
-
-  useEffect(() => {
+  const handleRecalibrate = () => {
+    setIsRecalibrating(true);
+    setRecalibrateProgress(0);
+    let p = 0;
     const interval = setInterval(() => {
-      setAutomations(prev => prev.map(a => {
-        // Automatically advance non-linked items
-        if (a.status !== 'LINKED' && a.status !== 'AUDIT_BALANCING_VAULT' && a.status !== 'EDGE_READY') {
-          const next = a.progress + 10;
-          if (next >= 100) return { ...a, progress: 100, status: 'LINKED' };
-          return { ...a, progress: next };
-        }
-        return a;
-      }));
-    }, 800);
-    return () => clearInterval(interval);
-  }, []);
+      p += 2;
+      setRecalibrateProgress(p);
+      if (p >= 100) {
+        clearInterval(interval);
+        setIsRecalibrating(false);
+        setMerchantStatus('CALIBRATED');
+        localStorage.setItem('neoxz_merchant_calibrated', 'true');
+        // Update the SOVEREIGN-M-CORE status in automations
+        setAutomations(prev => prev.map(a => a.id === 'SOVEREIGN-M-CORE' ? { ...a, status: 'CALIBRATED' } : a));
+      }
+    }, 40);
+  };
 
   if (activeView === 'INGESTION') {
     return (
@@ -122,58 +109,145 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       
-      {/* Capital Breakdown Hero */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-         {/* NEOXZ Systemic Capital */}
-         <div className="p-10 rounded-[3.5rem] bg-slate-900/40 border border-emerald-500/20 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-3xl">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Landmark className="w-40 h-40 text-emerald-500" />
+      {/* MERCHANT PROFILE STATUS SECTION */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+         <div className={`xl:col-span-8 p-12 bg-gradient-to-br from-black to-slate-900 border-2 transition-all duration-1000 ${merchantStatus === 'CALIBRATED' ? 'border-emerald-500/40 shadow-[0_0_80px_rgba(16,185,129,0.1)]' : 'border-amber-500/30'} rounded-[4rem] relative overflow-hidden group`}>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(245,158,11,0.05)_0%,_transparent_70%)] opacity-50"></div>
+            <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+               <FileBadge className="w-80 h-80 text-amber-500" />
             </div>
-            <div className="relative z-10 space-y-4">
-               <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                     <Globe className="w-6 h-6" />
+
+            <header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 relative z-10 gap-6">
+               <div className="flex items-center gap-6">
+                  <div className={`p-4 rounded-3xl transition-all duration-700 ${merchantStatus === 'CALIBRATED' ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-amber-500 shadow-amber-500/20'} text-black shadow-2xl`}>
+                     {merchantStatus === 'CALIBRATED' ? <BadgeCheck className="w-8 h-8" /> : <Award className="w-8 h-8" />}
                   </div>
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">NEOXZ Systemic Capital</span>
+                  <div>
+                     <h3 className="text-2xl font-black text-white uppercase tracking-widest">Merchant Profile Upgrade</h3>
+                     <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${merchantStatus === 'CALIBRATED' ? 'text-emerald-400' : 'text-amber-500'}`}>NEOXZ SYSTEMS • GOOGLE CLOUD DEVELOPER</span>
+                     </div>
+                  </div>
                </div>
-               <div className="text-4xl sm:text-5xl font-black text-white tracking-tighter leading-none mono glow-emerald">
-                  $985,004,531,802.00
+               <div className="flex gap-3">
+                 <button 
+                   onClick={handleRecalibrate}
+                   disabled={isRecalibrating}
+                   className={`px-8 py-3 rounded-2xl transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest ${
+                     merchantStatus === 'CALIBRATED' 
+                       ? 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white' 
+                       : 'bg-amber-500 text-black hover:bg-amber-400'
+                   }`}
+                 >
+                    <RefreshCw className={`w-4 h-4 ${isRecalibrating ? 'animate-spin' : ''}`} />
+                    {isRecalibrating ? 'Recalibrating...' : 'Trigger Recalibration'}
+                 </button>
                </div>
-               <div className="flex items-center gap-3">
-                  <div className="h-1 w-16 bg-emerald-500 rounded-full"></div>
-                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
-                     Global Liquidity Core
-                  </span>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+               <div className="p-8 rounded-[3rem] bg-black/60 border border-slate-800 space-y-4 shadow-inner group/data hover:border-amber-500/20 transition-colors">
+                  <div className="flex items-center justify-between">
+                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Merchant ID</span>
+                     <Fingerprint className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="text-xl font-black text-white mono tracking-tighter">BCR2DN4TU7BMDMDU</p>
+                  <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                     <div className="h-full bg-amber-500 w-full"></div>
+                  </div>
+               </div>
+               <div className="p-8 rounded-[3rem] bg-black/60 border border-slate-800 space-y-4 shadow-inner group/data hover:border-cyan-500/20 transition-colors">
+                  <div className="flex items-center justify-between">
+                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Issuer ID</span>
+                     <Box className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <p className="text-xl font-black text-white mono tracking-tighter">3388000000023071477</p>
+                  <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                     <div className="h-full bg-cyan-400 w-full"></div>
+                  </div>
+               </div>
+               <div className={`p-8 rounded-[3rem] bg-black/60 border space-y-4 shadow-inner group/data transition-all duration-700 ${merchantStatus === 'CALIBRATED' ? 'border-emerald-500/30' : 'border-slate-800'}`}>
+                  <div className="flex items-center justify-between">
+                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Profile Status</span>
+                     {merchantStatus === 'CALIBRATED' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />}
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                     <span className={`text-xl font-black uppercase ${merchantStatus === 'CALIBRATED' ? 'text-emerald-400' : 'text-amber-500 animate-pulse'}`}>
+                        {merchantStatus}
+                     </span>
+                     <span className="text-[8px] font-mono text-slate-600">SDS_LOCK</span>
+                  </div>
+                  <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                     <div className={`h-full transition-all duration-1000 ${merchantStatus === 'CALIBRATED' ? 'bg-emerald-500 w-full' : 'bg-amber-500 w-[65%]'}`}></div>
+                  </div>
+               </div>
+            </div>
+
+            <div className={`mt-10 p-6 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 transition-all duration-700 ${merchantStatus === 'CALIBRATED' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/10'}`}>
+               <div className="flex items-center gap-6">
+                  <Activity className={`w-8 h-8 ${isRecalibrating ? 'text-amber-500 animate-bounce' : merchantStatus === 'CALIBRATED' ? 'text-emerald-500' : 'text-slate-700'}`} />
+                  <div className="space-y-1">
+                     <span className="text-[11px] font-black text-white uppercase tracking-widest">Mandate Alignment Check</span>
+                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest italic">
+                       {isRecalibrating ? `Scanning sub-atomic ID clusters... ${recalibrateProgress}%` : merchantStatus === 'CALIBRATED' ? "ALL MERCHANT RAILS ALIGNED & UPGRADED." : "Identity stagged. Handshake required for 1:1 parity."}
+                     </p>
+                  </div>
+               </div>
+               <div className="flex items-center gap-4">
+                  <div className="px-5 py-2 rounded-xl bg-black border border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                     <Cloud className="w-4 h-4 text-blue-400" />
+                     GCP_NODE: neoxz-systems-v16
+                  </div>
                </div>
             </div>
          </div>
 
-         {/* Founder Reserve */}
-         <div className="p-10 rounded-[3.5rem] bg-slate-900/40 border border-amber-500/20 relative overflow-hidden group hover:border-amber-500/40 transition-all shadow-3xl">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Crown className="w-40 h-40 text-amber-500" />
-            </div>
-            <div className="relative z-10 space-y-4">
-               <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                     <ShieldCheck className="w-6 h-6" />
+         {/* QUICK STATS SIDEBAR */}
+         <div className="xl:col-span-4 space-y-6">
+            <div className="p-10 rounded-[3.5rem] bg-slate-900/40 border border-emerald-500/20 relative overflow-hidden group shadow-3xl flex-1 flex flex-col justify-center">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Landmark className="w-40 h-40 text-emerald-500" />
+               </div>
+               <div className="relative z-10 space-y-4">
+                  <div className="flex items-center gap-4 mb-2">
+                     <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <Globe className="w-6 h-6" />
+                     </div>
+                     <span className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Systemic Capital</span>
                   </div>
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Founder Authority (NE.B.RU)</span>
+                  <div className="text-4xl font-black text-white tracking-tighter leading-none mono glow-emerald">
+                     $985,004,531,802
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+                     <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Global Liquidity Core</span>
+                  </div>
                </div>
-               <div className="text-4xl sm:text-5xl font-black text-white tracking-tighter leading-none mono">
-                  $500,004,531,802.00
+            </div>
+
+            <div className="p-10 rounded-[3.5rem] bg-slate-900/40 border border-indigo-500/20 relative overflow-hidden group shadow-3xl flex-1 flex flex-col justify-center">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Cpu className="w-40 h-40 text-indigo-500" />
                </div>
-               <div className="flex items-center gap-3">
-                  <div className="h-1 w-16 bg-amber-500 rounded-full"></div>
-                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
-                     Liquid Reserve • Immediate Access
-                  </span>
+               <div className="relative z-10 space-y-4">
+                  <div className="flex items-center gap-4 mb-2">
+                     <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <Zap className="w-6 h-6" />
+                     </div>
+                     <span className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Processing Speed</span>
+                  </div>
+                  <div className="text-4xl font-black text-white tracking-tighter leading-none mono">
+                     12.4M TPS
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                     <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Quantum Overdrive Active</span>
+                  </div>
                </div>
             </div>
          </div>
       </div>
 
-      {/* Light Web Data Source Indicator */}
       <div className="flex items-center justify-between px-6 py-4 rounded-[2rem] bg-slate-900/30 border border-slate-800">
          <div className="flex items-center gap-4">
             <Network className="w-5 h-5 text-purple-400 animate-pulse" />
@@ -181,14 +255,31 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
          </div>
          <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
-            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">GATHERING PAYMENTS & COLLECTIONS</span>
+            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">SYNCING MERCHANT TRANSACTIONS</span>
          </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          <div className="lg:col-span-2 space-y-8">
             <RecentTransactions transactions={mockTransactions} />
-            <GooglePayStatusMonitor />
+            
+            <div className="p-8 bg-rose-950/20 border-2 border-rose-500/30 rounded-[3rem] space-y-6 relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-6 opacity-10">
+                  <ShieldX className="w-32 h-32 text-rose-500" />
+               </div>
+               <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-rose-500 text-white shadow-xl animate-pulse">
+                     <ShieldAlert className="w-6 h-6" />
+                  </div>
+                  <div>
+                     <h3 className="text-sm font-black uppercase tracking-widest text-white">External Rail Sanction</h3>
+                     <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest mt-0.5">PROTOCOL_ENFORCED: G-PAY_INDIA_BLOCKED</p>
+                  </div>
+               </div>
+               <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-xl">
+                 Regional rail isolation for India remains absolute. Mandate prohibits third-party API exposure in high-risk zones. Merchant profile BCR2DN4TU7BMDMDU is restricted from this regional vector.
+               </p>
+            </div>
          </div>
          
          <div className="space-y-4">
@@ -204,13 +295,8 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                >
                  Gather Financial Data <ArrowUpRight className="w-4 h-4" />
                </button>
-               
-               <div className="text-[9px] text-slate-600 leading-relaxed pt-2 border-t border-white/5">
-                  Collecting payments and digital currencies from Light Web for Quantum Banking Audit.
-               </div>
             </div>
 
-            {/* External Automations Card */}
             <div className="minimal-card p-6 rounded-2xl flex flex-col gap-4">
                <div className="flex items-center gap-3 mb-2">
                   <Bot className="w-5 h-5 text-purple-400" />
@@ -219,106 +305,24 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                <div className="space-y-3">
                   {automations.map((auto, i) => (
                     <div key={i} className={`flex flex-col gap-2 p-3 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden group ${
-                      auto.id === 'QUANTUM-BANK-SYS' ? 'border-emerald-500/50 bg-emerald-500/10' : 
-                      auto.id === 'CF-ZERO-TRUST' ? 'border-orange-500/30 bg-orange-500/5' :
-                      auto.id === 'BCR2DN4TU7BMDMDU' ? 'border-blue-500/30 bg-blue-500/5' : ''
+                      auto.id === 'G-PAY-IN-BLOCK' ? 'border-rose-500/30 bg-rose-500/5' : 
+                      auto.id === 'QUANTUM-BANK-SYS' ? 'border-emerald-500/50 bg-emerald-500/10' : ''
                     }`}>
                        <div className="flex items-center justify-between relative z-10">
                           <div className="flex items-center gap-3">
-                             <div className={`p-2 rounded-lg bg-black ${auto.id === 'CF-ZERO-TRUST' ? 'text-orange-500' : 'text-purple-400'}`}>
+                             <div className={`p-2 rounded-lg bg-black ${auto.status.includes('BLOCK') ? 'text-rose-500' : 'text-purple-400'}`}>
                                 <auto.icon className="w-4 h-4" />
                              </div>
                              <div className="flex flex-col">
                                 <span className="text-[10px] font-bold text-slate-200 uppercase tracking-tight truncate max-w-[120px]">{auto.name}</span>
-                                {auto.id === 'QUANTUM-BANK-SYS' ? (
-                                  <span className="text-[8px] font-mono text-emerald-400 font-black">AUDIT & VAULT</span>
-                                ) : (
-                                  <span className="text-[8px] font-mono text-slate-500">{auto.id}</span>
-                                )}
+                                <span className="text-[8px] font-mono text-slate-500">{auto.type}</span>
                              </div>
                           </div>
                           <div className="flex items-center gap-2">
-                             <span className={`text-[8px] font-black uppercase tracking-wider ${auto.status.includes('LINKED') || auto.status.includes('AUDIT') || auto.status === 'EDGE_READY' ? 'text-emerald-500' : 'text-amber-500 animate-pulse'}`}>
+                             <span className={`text-[8px] font-black uppercase tracking-wider ${auto.status.includes('LOCKED') || auto.status.includes('READY') || auto.status.includes('CALIBRATED') ? 'text-emerald-500' : auto.status.includes('BLOCK') ? 'text-rose-500' : 'text-amber-500 animate-pulse'}`}>
                                 {auto.status}
                              </span>
-                             {(auto.status.includes('LINKED') || auto.status.includes('AUDIT') || auto.status === 'EDGE_READY') && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                           </div>
-                       </div>
-                       
-                       {(auto.status === 'PROCESSING' || auto.status === 'AUTOMATING') ? (
-                         <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative z-10 mt-1">
-                            <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${auto.progress}%` }}></div>
-                         </div>
-                       ) : (
-                         <div className={`absolute inset-0 border-l-2 pointer-events-none ${auto.id === 'CF-ZERO-TRUST' ? 'bg-orange-500/5 border-orange-500' : 'bg-emerald-500/5 border-emerald-500'}`}></div>
-                       )}
-                       
-                       {/* Specific Action for Google Pay */}
-                       {auto.id === 'BCR2DN4TU7BMDMDU' && auto.status === 'LINKED' && (
-                         <button 
-                           onClick={onTriggerAttestation}
-                           className="w-full mt-2 py-2 rounded-lg bg-blue-500/10 text-blue-400 font-black text-[9px] uppercase tracking-widest border border-blue-500/20 hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2 relative z-20"
-                         >
-                           <FileCheck className="w-3 h-3" />
-                           ATTESTATION: VERIFIED
-                         </button>
-                       )}
-
-                       {/* Action for Quantum Banking */}
-                       {auto.id === 'QUANTUM-BANK-SYS' && (
-                         <a 
-                           href={auto.url}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="w-full mt-2 py-2 rounded-lg bg-emerald-500 text-black font-black text-[9px] uppercase tracking-widest hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 relative z-20 shadow-lg"
-                         >
-                           <ExternalLink className="w-3 h-3" />
-                           ACCESS VAULT & AUDIT
-                         </a>
-                       )}
-
-                       {/* Action for Cloudflare Tunnel */}
-                       {auto.id === 'CF-ZERO-TRUST' && (
-                         <button 
-                           onClick={onOpenTunnel}
-                           className="w-full mt-2 py-2 rounded-lg bg-[#F48120] text-black font-black text-[9px] uppercase tracking-widest hover:bg-orange-500 transition-all flex items-center justify-center gap-2 relative z-20 shadow-lg"
-                         >
-                           <ShieldCheck className="w-3 h-3" />
-                           ESTABLISH SECURE TUNNEL
-                         </button>
-                       )}
-                       
-                       {auto.id !== 'BCR2DN4TU7BMDMDU' && auto.id !== 'QUANTUM-BANK-SYS' && auto.id !== 'CF-ZERO-TRUST' && (
-                         <a href={auto.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" />
-                       )}
-                    </div>
-                  ))}
-               </div>
-            </div>
-
-            {/* Cloud Resources Section */}
-            <div className="minimal-card p-6 rounded-2xl flex flex-col gap-4">
-               <div className="flex items-center gap-3 mb-2">
-                  <Cloud className="w-5 h-5 text-blue-400" />
-                  <span className="text-xs font-black text-white uppercase tracking-widest">Cloud Resources (GCP)</span>
-               </div>
-               <div className="space-y-3">
-                  {cloudResources.map((res, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-blue-400/30 transition-all group">
-                       <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-black text-blue-400 group-hover:text-white transition-colors">
-                             <res.icon className="w-4 h-4" />
-                          </div>
-                          <div className="flex flex-col">
-                             <span className="text-[10px] font-bold text-slate-200 uppercase tracking-tight">{res.name}</span>
-                             <span className="text-[8px] font-mono text-slate-500">{res.type}</span>
-                          </div>
-                       </div>
-                       <div className="flex flex-col items-end">
-                          <span className="text-[10px] font-mono text-white">{res.cost}</span>
-                          <span className={`text-[8px] font-black uppercase tracking-wider ${res.status === 'RUNNING' || res.status === 'ACTIVE' || res.status === 'PROCESSING' ? 'text-emerald-500' : 'text-slate-500'}`}>
-                             {res.status}
-                          </span>
                        </div>
                     </div>
                   ))}

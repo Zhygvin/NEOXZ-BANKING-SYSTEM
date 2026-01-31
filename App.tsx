@@ -101,12 +101,10 @@ const App: React.FC = () => {
     activeAlerts: threatLevel === 'CRITICAL' ? ['CRITICAL_THREAT_DETECTED', 'FORENSIC_LOCK_ENGAGED'] : [],
     isTunnelActive,
     businessIntegration: {
-      provider: 'Google Pay Business',
-      merchantId: 'BCR2DN4TU7BMDMDU',
-      issuerId: '3388000000023071477',
-      consoleUrl: 'https://pay.google.com/business/console/payment/BCR2DN4TU7BMDMDU',
-      gatewayResponse: 'https://www.sh-pay.com/pay/response/',
-      status: 'VERIFIED_MERCHANT'
+      provider: 'NEOXZ Sovereign Merchant Core',
+      merchantId: 'NEOXZ-S-001',
+      issuerId: 'SOVEREIGN_ANCHOR_v16',
+      status: 'VERIFIED_SOVEREIGN_ENTITY'
     }
   };
 
@@ -199,7 +197,7 @@ const App: React.FC = () => {
     localStorage.setItem('neoxz_deployed', 'true');
     localStorage.setItem('neoxz_singularity', 'true');
     setShowQuantumSpeed(false);
-    setActiveTab('COMMAND'); // Move to Command Hub after warp
+    setActiveTab('COMMAND'); 
     triggerLightning();
   };
 
@@ -262,7 +260,7 @@ const App: React.FC = () => {
 
   const immutabilityConfig = getImmutabilityConfig();
   const securityIndicator = getSecurityIndicator();
-  const globalStats = { neoxzBankCapital: balance, realityParity: 1.0, threatLevel, coreImmutability, activeProtocols: 4117, institutionalId: subscriberData?.merchantId || 'BCR2DN4TU7BMDMDU', kycStatus: 'VERIFIED', legalCompliance: 'SOVEREIGN_BENEFICIARY_LOCKED' };
+  const globalStats = { neoxzBankCapital: balance, realityParity: 1.0, threatLevel, coreImmutability, activeProtocols: 4117, institutionalId: subscriberData?.merchantId || 'NEOXZ-S-001', kycStatus: 'VERIFIED', legalCompliance: 'SOVEREIGN_BENEFICIARY_LOCKED' };
 
   if (!isAuthorized) return <ApiKeySetup onSuccess={() => setIsAuthorized(true)} />;
   if (!subscriberData) return <SovereignSubscriptionOverlay onComplete={handleSubscription} />;
@@ -271,7 +269,6 @@ const App: React.FC = () => {
     <SecurityLayer threatLevel={threatLevel} coreImmutability={coreImmutability}>
       <div className={`flex h-screen w-full bg-black text-slate-200 overflow-hidden font-sans transition-colors duration-1000 ${isSingularity ? 'selection:bg-amber-500/30' : 'selection:bg-emerald-500/30'}`}>
         
-        {/* Floating Command Trigger (Neural Link) */}
         <button 
           onClick={() => setShowAssistantSidebar(!showAssistantSidebar)}
           className={`fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] px-8 py-3 rounded-full border transition-all duration-500 flex items-center gap-4 group ${
@@ -322,7 +319,7 @@ const App: React.FC = () => {
 
         {showAttestation && (
           <IntegrationAttestationOverlay 
-            merchantId="BCR2DN4TU7BMDMDU" 
+            merchantId="NEOXZ-S-001" 
             onComplete={handleAttestationComplete} 
           />
         )}
@@ -346,7 +343,6 @@ const App: React.FC = () => {
           />
         )}
 
-        {/* Ultra Minimal Sidebar */}
         <aside className="w-16 flex flex-col items-center py-8 z-50 bg-black/50 backdrop-blur-sm border-r border-white/5">
           <div className="mb-12 opacity-80 hover:opacity-100 transition-opacity">
              <Logo size={28} />
@@ -382,9 +378,7 @@ const App: React.FC = () => {
           </div>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Header */}
           <header className={`h-20 flex items-center justify-between px-8 z-40 border-b border-white/5 bg-black/40 backdrop-blur-sm transition-all ${isSingularity ? 'shadow-[0_0_40px_rgba(245,158,11,0.05)]' : ''}`}>
              <div className="flex items-center gap-3">
                 <span className={`text-[10px] font-black uppercase tracking-widest ${isSingularity ? 'text-amber-500' : 'text-slate-500'}`}>{activeTab} VIEW</span>
@@ -403,7 +397,6 @@ const App: React.FC = () => {
 
                 <div className="h-4 w-[1px] bg-slate-800 mx-2 hidden md:block"></div>
                 
-                {/* Security Status Capsule */}
                 <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full border transition-all bg-black/40 border-white/5`}>
                    <securityIndicator.icon className={`w-3 h-3 ${securityIndicator.color} ${threatLevel !== 'LOW' ? 'animate-pulse' : ''}`} />
                    <span className={`text-[9px] font-black uppercase tracking-widest ${securityIndicator.color}`}>{securityIndicator.label}</span>
@@ -414,7 +407,6 @@ const App: React.FC = () => {
                    <span className="text-[9px] font-black uppercase tracking-widest">{immutabilityConfig.label}</span>
                 </div>
 
-                {/* Cloudflare Tunnel Status */}
                 {isTunnelActive && (
                   <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full border transition-all bg-orange-500/10 border-orange-500/20">
                      <CloudLightning className="w-3 h-3 text-orange-500" />
@@ -505,7 +497,6 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        {/* Command Panel (Assistant) */}
         {showAssistantSidebar && (
           <aside className="w-[450px] z-30 transition-all duration-500 animate-in slide-in-from-right">
             <Assistant 
