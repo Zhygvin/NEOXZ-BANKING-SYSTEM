@@ -176,7 +176,7 @@ const DataIngestionVault: React.FC<DataIngestionVaultProps> = ({ onUpload, onDel
                 <UploadCloud className={`w-8 h-8 text-cyan-400 ${uploading ? 'animate-bounce' : ''}`} />
               </div>
               <div>
-                <h3 className="text-sm font-black uppercase tracking-[0.4em] text-white">Light Web Data Gathering</h3>
+                <h3 className="text-sm font-black uppercase tracking-[0.4em] text-white">Light Web Financial Data Gathering</h3>
                 <span className="text-[10px] text-cyan-500 font-bold tracking-widest uppercase italic">PAYMENTS / COLLECTIONS / CURRENCIES</span>
               </div>
             </div>

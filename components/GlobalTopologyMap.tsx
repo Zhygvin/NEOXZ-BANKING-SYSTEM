@@ -1,5 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Globe, Network, Radio, ShieldCheck, Zap, Activity, Server, Cpu } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { 
+  Globe, Network, Radio, ShieldCheck, Zap, 
+  Activity, Server, Cpu, Database, 
+  Crosshair, Loader2, RefreshCw, Layers,
+  Compass, Map as MapIcon, Radar, Wifi, Terminal
+} from 'lucide-react';
 import { generateFastResponse } from '../services/geminiService';
 
 interface EdgeNode {
@@ -15,26 +20,69 @@ interface EdgeNode {
 
 const GlobalTopologyMap: React.FC = () => {
   const [nodes, setNodes] = useState<EdgeNode[]>([]);
-  const [activeNodesCount, setActiveNodesCount] = useState<number>(3850);
+  const [view, setView] = useState<'GLOBAL' | 'CLUSTER' | 'MESH'>('GLOBAL');
+  const [activeNodesCount, setActiveNodesCount] = useState<number>(4114);
   const [pulses, setPulses] = useState<{ id: number; fromX: number; fromY: number; toX: number; toY: number }[]>([]);
   const [nodeLogs, setNodeLogs] = useState<string[]>([]);
+  const [hoveredNode, setHoveredNode] = useState<EdgeNode | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Initialize fixed core nodes
   useEffect(() => {
     const initialNodes: EdgeNode[] = [
-      { id: 'PH-01', location: 'Manila', region: 'SEA', x: 75, y: 60, status: 'ACTIVE', latency: 0.001, load: 85 },
-      { id: 'JP-01', location: 'Tokyo', region: 'ASIA', x: 82, y: 35, status: 'ACTIVE', latency: 4, load: 42 },
-      { id: 'US-01', location: 'New York', region: 'NA', x: 25, y: 38, status: 'ACTIVE', latency: 62, load: 12 },
-      { id: 'UK-01', location: 'London', region: 'EU', x: 48, y: 30, status: 'ACTIVE', latency: 55, load: 28 },
-      { id: 'SG-01', location: 'Singapore', region: 'SEA', x: 72, y: 65, status: 'ACTIVE', latency: 2, load: 94 },
-      { id: 'AU-01', location: 'Sydney', region: 'OC', x: 85, y: 80, status: 'ACTIVE', latency: 12, load: 15 },
-      { id: 'BR-01', location: 'São Paulo', region: 'SA', x: 35, y: 75, status: 'ACTIVE', latency: 110, load: 8 },
+      { id: 'PH-MNL-01', location: 'Manila', region: 'PH', x: 75, y: 60, status: 'ACTIVE', latency: 0.001, load: 85 },
+      { id: 'JP-TYO-01', location: 'Tokyo', region: 'JP', x: 82, y: 35, status: 'ACTIVE', latency: 4, load: 42 },
+      { id: 'US-NYC-01', location: 'New York', region: 'US', x: 25, y: 38, status: 'ACTIVE', latency: 62, load: 12 },
+      { id: 'UK-LON-01', location: 'London', region: 'UK', x: 48, y: 30, status: 'ACTIVE', latency: 55, load: 28 },
+      { id: 'SG-SIN-01', location: 'Singapore', region: 'SG', x: 72, y: 65, status: 'ACTIVE', latency: 2, load: 94 },
+      { id: 'AU-SYD-01', location: 'Sydney', region: 'AU', x: 85, y: 80, status: 'ACTIVE', latency: 12, load: 15 },
+      { id: 'BR-SAO-01', location: 'São Paulo', region: 'BR', x: 35, y: 75, status: 'ACTIVE', latency: 110, load: 8 },
     ];
     setNodes(initialNodes);
   }, []);
 
+  // 4,117 Node Status Matrix (Canvas based for performance)
   useEffect(() => {
-    // Dynamic Node Activity Simulation
+    if (view !== 'MESH') return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    const render = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cols = 71; // sqrt(4117) approx 64, adjusted for aspect ratio
+      const rows = 58; 
+      const size = 6;
+      const gap = 2;
+      
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * cols + c;
+          if (idx >= 4117) break;
+          
+          const x = c * (size + gap);
+          const y = r * (size + gap);
+          
+          // Random health simulation
+          const health = Math.random();
+          if (health > 0.99) ctx.fillStyle = '#f59e0b'; // Amber
+          else if (health > 0.999) ctx.fillStyle = '#f43f5e'; // Rose
+          else ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'; // Emerald
+          
+          ctx.beginPath();
+          ctx.roundRect(x, y, size, size, 1);
+          ctx.fill();
+        }
+      }
+      animationFrameId = requestAnimationFrame(render);
+    };
+    render();
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [view]);
+
+  useEffect(() => {
     const nodeInterval = setInterval(() => {
       setNodes(prev => prev.map(node => ({
         ...node,
@@ -45,32 +93,29 @@ const GlobalTopologyMap: React.FC = () => {
       setActiveNodesCount(prev => Math.min(4117, prev + Math.floor(Math.random() * 5) - 2));
     }, 2000);
 
-    // Traffic Pulse Simulation
     const pulseInterval = setInterval(() => {
       const fromIdx = Math.floor(Math.random() * nodes.length);
       const toIdx = Math.floor(Math.random() * nodes.length);
       if (fromIdx !== toIdx && nodes[fromIdx] && nodes[toIdx]) {
-        const newPulse = {
+        setPulses(prev => [...prev, {
           id: Date.now(),
           fromX: nodes[fromIdx].x,
           fromY: nodes[fromIdx].y,
           toX: nodes[toIdx].x,
           toY: nodes[toIdx].y,
-        };
-        setPulses(prev => [...prev, newPulse].slice(-15));
+        }].slice(-20));
       }
-    }, 1200);
+    }, 800);
 
-    // AI-Powered Network Logs (Flash)
     const logInterval = setInterval(async () => {
        try {
          const log = await generateFastResponse(
-           "Generate a technical network traffic log entry between two global cities. Format: '[ROUTING] City1 -> City2 | Details'. Max 10 words.",
-           "You are a global network traffic monitor. Output raw log text only."
+           "Generate a technical network routing log entry. Format: '[SDS_SYNC] NodeID_Hash -> Target | 1.0000 Parity'. Max 10 words.",
+           "Global topology monitor."
          );
-         setNodeLogs(prev => [log, ...prev].slice(0, 5));
+         setNodeLogs(prev => [log, ...prev].slice(0, 8));
        } catch (e) {}
-    }, 4000);
+    }, 5000);
 
     return () => {
       clearInterval(nodeInterval);
@@ -80,144 +125,225 @@ const GlobalTopologyMap: React.FC = () => {
   }, [nodes]);
 
   return (
-    <div className="bg-slate-900/40 border border-emerald-500/20 rounded-[3rem] p-10 space-y-8 shadow-3xl relative overflow-hidden backdrop-blur-3xl group transition-all hover:border-emerald-500/40 min-h-[550px] flex flex-col">
-      <div className="absolute top-0 left-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-        <Globe className="w-48 h-48 text-emerald-500" />
+    <div className="bg-slate-900/40 border border-emerald-500/20 rounded-[3.5rem] p-10 space-y-8 shadow-3xl relative overflow-hidden backdrop-blur-3xl group transition-all hover:border-emerald-500/40 min-h-[600px] flex flex-col">
+      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+        <Radar className="w-48 h-48 text-emerald-500 animate-spin-slow" />
       </div>
 
+      {/* TACTICAL HEADER */}
       <div className="flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-5">
-          <div className="p-4 rounded-3xl bg-emerald-500/10 border border-emerald-500/20">
-            <Network className="w-8 h-8 text-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-6">
+          <div className="p-4 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <Compass className="w-8 h-8 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.4em] text-white">Global Real-Time Topology</h3>
-            <span className="text-[10px] text-emerald-500 font-bold tracking-widest uppercase italic">LIVE EDGE NODE FEED v15.0</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-           <div className="flex flex-col items-end">
-              <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Federated Nodes</span>
-              <span className="text-xl font-black text-white mono tracking-tighter">{activeNodesCount.toLocaleString()} / 4,117</span>
-           </div>
-           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
-        </div>
-      </div>
-
-      <div className="flex-1 relative bg-black/60 border border-slate-800 rounded-[2.5rem] overflow-hidden shadow-inner flex flex-col">
-        {/* Map Visualization Area */}
-        <div className="flex-1 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <div className="grid grid-cols-10 h-full border-l border-emerald-500/10">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="border-r border-emerald-500/10"></div>
-              ))}
+            <h3 className="text-xl font-black uppercase tracking-[0.4em] text-white">Federated Mesh Overwatch</h3>
+            <div className="flex items-center gap-3 mt-1">
+               <span className="text-[10px] text-emerald-500 font-black tracking-widest uppercase italic">Node Parity: 1.000000</span>
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></div>
             </div>
           </div>
-
-          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full preserve-3d">
-            {/* Connection Lines (Static Background) */}
-            <path d="M75,60 L82,35 L48,30 L25,38 L35,75 L85,80 L75,60" fill="none" stroke="#10b981" strokeWidth="0.1" strokeDasharray="1,2" className="opacity-20" />
-            
-            {/* Active Data Pulses */}
-            {pulses.map(pulse => (
-              <g key={pulse.id}>
-                <line 
-                  x1={pulse.fromX} y1={pulse.fromY} 
-                  x2={pulse.toX} y2={pulse.toY} 
-                  stroke="#10b981" strokeWidth="0.2" 
-                  className="animate-[pulse_1.5s_ease-out_forwards]"
-                />
-                <circle r="0.5" fill="#10b981">
-                  <animateMotion 
-                    dur="1.5s" 
-                    repeatCount="1" 
-                    path={`M${pulse.fromX},${pulse.fromY} L${pulse.toX},${pulse.toY}`} 
-                  />
-                  <animate attributeName="opacity" values="1;0" dur="1.5s" repeatCount="1" />
-                </circle>
-              </g>
-            ))}
-
-            {/* Nodes */}
-            {nodes.map(node => (
-              <g key={node.id} className="cursor-help group/node">
-                <circle 
-                  cx={node.x} cy={node.y} r={node.id === 'PH-01' ? "1.2" : "0.8"} 
-                  className={`${node.status === 'SYNCING' ? 'fill-amber-500 animate-pulse' : 'fill-emerald-500'} transition-all`}
-                />
-                <circle 
-                  cx={node.x} cy={node.y} r={node.id === 'PH-01' ? "3" : "2"} 
-                  className={`fill-none stroke-current opacity-20 ${node.status === 'SYNCING' ? 'text-amber-500' : 'text-emerald-500'}`}
-                  strokeWidth="0.1"
-                >
-                  <animate attributeName="r" values="0;4" dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.3;0" dur="2s" repeatCount="indefinite" />
-                </circle>
-                {/* Labels (Small) */}
-                <text x={node.x} y={node.y + 3} className="fill-slate-500 font-mono text-[1.5px] uppercase tracking-tighter" textAnchor="middle">
-                  {node.id}
-                </text>
-              </g>
-            ))}
-          </svg>
-
-          {/* Regional Information Overlay */}
-          <div className="absolute top-6 left-6 p-4 rounded-2xl bg-black/80 border border-slate-800 backdrop-blur-xl space-y-3 min-w-[180px] shadow-2xl">
-             <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-                <Activity className="w-3 h-3 text-emerald-500" />
-                <span className="text-[9px] font-black text-white uppercase tracking-widest">Regional Metrics</span>
-             </div>
-             <div className="space-y-2">
-                {nodes.slice(0, 3).map(n => (
-                  <div key={n.id} className="flex items-center justify-between gap-4">
-                     <span className="text-[8px] font-mono text-slate-500">{n.location}</span>
-                     <span className={`text-[8px] font-mono ${n.latency < 5 ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>{n.latency.toFixed(2)}ms</span>
-                  </div>
-                ))}
-             </div>
-          </div>
-
-          <div className="absolute bottom-6 right-6 p-4 rounded-2xl bg-black/80 border border-slate-800 backdrop-blur-xl flex flex-col gap-2 shadow-2xl">
-             <div className="flex items-center gap-3">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-[9px] font-black text-white uppercase">Master Tether Locked</span>
-             </div>
-             <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                <code className="text-[9px] text-emerald-500/80 font-mono tracking-tighter uppercase">SDS_SYNC_PARITY: 1.0000</code>
-             </div>
-          </div>
         </div>
 
-        {/* Real-Time Handshake Log Feed */}
-        <div className="h-24 bg-black/80 border-t border-slate-800 p-4 font-mono text-[9px] overflow-hidden flex flex-col">
-           <div className="flex items-center gap-3 text-slate-500 uppercase tracking-widest mb-2 px-2">
-              <Cpu className="w-3 h-3" />
-              <span>Real-Time Node Handshake Log</span>
-           </div>
-           <div className="flex-1 space-y-1 overflow-hidden opacity-80">
-              {nodeLogs.map((log, i) => (
-                <div key={i} className="flex gap-4 animate-in slide-in-from-bottom-1 duration-300">
-                  <span className="text-emerald-500/40 shrink-0">[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
-                  <span className="text-slate-300 truncate">{log}</span>
-                </div>
+        <div className="flex items-center gap-4">
+           <div className="flex gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-slate-800">
+              {(['GLOBAL', 'CLUSTER', 'MESH'] as const).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                    view === v ? 'bg-emerald-500 text-black shadow-xl' : 'text-slate-500 hover:text-white'
+                  }`}
+                >
+                  {v}
+                </button>
               ))}
            </div>
         </div>
       </div>
 
-      <div className="p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between">
-         <div className="flex items-center gap-4">
-            <Radio className="w-5 h-5 text-emerald-400 animate-pulse" />
-            <p className="text-[9px] text-slate-500 leading-relaxed font-black uppercase tracking-tighter italic">
-              "The NEOXZ mandate global mesh is operating at peak efficiency. All nodes verified under press.neoxz@gmail.com authority."
-            </p>
-         </div>
-         <button className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-[9px] font-black uppercase text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all">
-            Refresh Edges
-         </button>
+      {/* MAIN VISUALIZATION STAGE */}
+      <div className="flex-1 relative bg-black/60 border border-slate-800 rounded-[3rem] overflow-hidden shadow-inner flex flex-col group/stage">
+        
+        {/* VIEW 1: GLOBAL TOPOLOGY */}
+        {view === 'GLOBAL' && (
+          <div className="flex-1 relative animate-in fade-in duration-500">
+            <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full preserve-3d">
+              {/* Connection Lines (SDS Mesh) */}
+              {nodes.map((n1, i) => nodes.slice(i + 1).map(n2 => (
+                <line 
+                  key={`${n1.id}-${n2.id}`}
+                  x1={n1.x} y1={n1.y} 
+                  x2={n2.x} y2={n2.y} 
+                  stroke="rgba(16, 185, 129, 0.05)" 
+                  strokeWidth="0.1"
+                />
+              )))}
+              
+              {/* Active Data Pulses */}
+              {pulses.map(pulse => (
+                <g key={pulse.id}>
+                  <path 
+                    d={`M${pulse.fromX},${pulse.fromY} Q${(pulse.fromX + pulse.toX)/2},${(pulse.fromY + pulse.toY)/2 - 10} ${pulse.toX},${pulse.toY}`}
+                    fill="none" stroke="#10b981" strokeWidth="0.3" 
+                    className="opacity-40"
+                    style={{ strokeDasharray: '1, 5' }}
+                  />
+                  <circle r="0.6" fill="#fff" filter="url(#glow)">
+                    <animateMotion 
+                      dur="1.2s" 
+                      repeatCount="1" 
+                      path={`M${pulse.fromX},${pulse.fromY} Q${(pulse.fromX + pulse.toX)/2},${(pulse.fromY + pulse.toY)/2 - 10} ${pulse.toX},${pulse.toY}`} 
+                    />
+                  </circle>
+                </g>
+              ))}
+
+              {/* Nodes */}
+              {nodes.map(node => (
+                <g key={node.id} onMouseEnter={() => setHoveredNode(node)} onMouseLeave={() => setHoveredNode(null)} className="cursor-crosshair">
+                  <circle 
+                    cx={node.x} cy={node.y} r={node.id === 'PH-MNL-01' ? "1.5" : "1.0"} 
+                    className={`${node.status === 'SYNCING' ? 'fill-amber-500' : 'fill-emerald-500'} transition-all`}
+                  />
+                  <circle cx={node.x} cy={node.y} r="3" className="fill-emerald-500/10 animate-pulse" />
+                </g>
+              ))}
+            </svg>
+          </div>
+        )}
+
+        {/* VIEW 2: CLUSTER ANALYTICS */}
+        {view === 'CLUSTER' && (
+          <div className="flex-1 p-12 grid grid-cols-2 md:grid-cols-4 gap-8 animate-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar">
+             {['ASIA-SOUTH', 'EUROPE-WEST', 'NA-NORTH', 'OCEANIA', 'LATAM', 'AFRICA-CENTRAL', 'ASIA-EAST', 'MIDDLE-EAST'].map((cluster, i) => (
+               <div key={i} className="p-8 rounded-[2.5rem] bg-black/40 border border-slate-800 flex flex-col items-center gap-4 group/cluster hover:border-emerald-500/40 transition-all">
+                  <div className="relative">
+                     <div className="w-20 h-20 rounded-full border-2 border-emerald-500/20 flex items-center justify-center group-hover/cluster:border-emerald-500/50 transition-colors">
+                        <Server className="w-8 h-8 text-emerald-400" />
+                     </div>
+                     <div className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[8px] font-black">512 NODES</div>
+                  </div>
+                  <div className="text-center">
+                     <span className="text-[10px] font-black text-white uppercase tracking-widest">{cluster}</span>
+                     <p className="text-[8px] text-slate-500 font-bold uppercase mt-1">Status: NOMINAL</p>
+                  </div>
+                  <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+                     <div className="h-full bg-emerald-500 w-[94%] animate-pulse"></div>
+                  </div>
+               </div>
+             ))}
+          </div>
+        )}
+
+        {/* VIEW 3: 4,117 NODE STATUS MESH */}
+        {view === 'MESH' && (
+          <div className="flex-1 p-8 flex items-center justify-center animate-in slide-in-from-bottom-4 duration-500 relative">
+             <div className="relative">
+                <canvas 
+                  ref={canvasRef} 
+                  width={566} 
+                  height={462} 
+                  className="max-w-full rounded-2xl shadow-2xl border border-white/5" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+             </div>
+             
+             <div className="absolute bottom-12 right-12 p-6 rounded-3xl bg-black/80 border border-emerald-500/30 backdrop-blur-xl space-y-4 max-w-xs shadow-3xl">
+                <div className="flex items-center gap-3">
+                   <div className="p-2 rounded-xl bg-emerald-500 text-black shadow-lg">
+                      <Layers className="w-4 h-4" />
+                   </div>
+                   <span className="text-[10px] font-black text-white uppercase tracking-widest">Full Mesh View</span>
+                </div>
+                <p className="text-[9px] text-slate-400 font-medium leading-relaxed uppercase">
+                   Displaying individual status of all 4,117 edge nodes. Uptime distribution optimized at 100% SDS parity.
+                </p>
+                <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                   <span className="text-[9px] font-black text-emerald-500 uppercase">Master Hash Lock</span>
+                   <code className="text-[9px] text-slate-600">0x7F...BALOG</code>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* PERSISTENT NODE DETAILS (HOVER/INFO) */}
+        {hoveredNode && (
+          <div className="absolute top-8 right-8 p-6 rounded-[2.5rem] bg-black/90 border border-emerald-500/40 backdrop-blur-2xl shadow-3xl animate-in fade-in zoom-in-95 duration-200 min-w-[240px] z-50">
+             <header className="flex justify-between items-start mb-6">
+                <div className="flex flex-col gap-1">
+                   <span className="text-xl font-black text-white mono">{hoveredNode.id}</span>
+                   <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{hoveredNode.location}, {hoveredNode.region}</span>
+                </div>
+                <div className="p-2 rounded-xl bg-emerald-500 text-black">
+                   <ShieldCheck className="w-4 h-4" />
+                </div>
+             </header>
+             <div className="space-y-4">
+                <div className="flex justify-between">
+                   <span className="text-[9px] font-bold text-slate-500 uppercase">Core Latency</span>
+                   <span className="text-[11px] font-black text-white mono">{hoveredNode.latency.toFixed(4)}ms</span>
+                </div>
+                <div className="flex justify-between">
+                   <span className="text-[9px] font-bold text-slate-500 uppercase">Resource Load</span>
+                   <span className="text-[11px] font-black text-white mono">{hoveredNode.load.toFixed(1)}%</span>
+                </div>
+                <div className="h-px bg-white/5 my-2"></div>
+                <div className="flex items-center gap-3">
+                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)]"></div>
+                   <span className="text-[9px] font-black text-emerald-500 uppercase">SDS_SYNC_LOCKED</span>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* REAL-TIME LOG FOOTER */}
+        <div className="h-32 bg-black/80 border-t border-slate-800 p-6 font-mono text-[10px] flex flex-col shrink-0">
+           <div className="flex items-center justify-between mb-3 px-2">
+              <div className="flex items-center gap-3 text-slate-500 uppercase tracking-[0.2em] font-black">
+                 {/* Added Terminal icon here */}
+                 <Terminal className="w-3 h-3" />
+                 <span>System Handshake Stream</span>
+              </div>
+              <div className="flex items-center gap-4">
+                 <span className="text-emerald-500/60 uppercase">{activeNodesCount.toLocaleString()} EDGES ONLINE</span>
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              </div>
+           </div>
+           <div className="flex-1 overflow-hidden space-y-1.5">
+              {nodeLogs.map((log, i) => (
+                <div key={i} className="flex gap-4 animate-in slide-in-from-left-2 opacity-80 hover:opacity-100 transition-opacity">
+                  <span className="text-slate-800 font-black shrink-0">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+                  <p className="text-slate-400 truncate">{log}</p>
+                </div>
+              ))}
+              <div className="animate-pulse text-emerald-500 font-black tracking-widest pl-2">_</div>
+           </div>
+        </div>
       </div>
+
+      <footer className="flex flex-col lg:flex-row items-center justify-between px-4 pt-2 gap-6 opacity-60 hover:opacity-100 transition-opacity">
+         <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3">
+               <Database className="w-4 h-4 text-emerald-500" />
+               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">SDS Parity Ledger: 1.0000</span>
+            </div>
+            <div className="flex items-center gap-3">
+               <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Wise v3.2 API Bridge: LATCHED</span>
+            </div>
+         </div>
+         <div className="flex items-center gap-4">
+            <span className="text-[8px] font-mono text-slate-700 uppercase tracking-[0.5em] italic">MANDATE_TOPOLOGY_v16.2.1-PRO</span>
+            <button className="p-2 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/30 transition-all">
+               <RefreshCw className="w-3 h-3" />
+            </button>
+         </div>
+      </footer>
+
+      {/* Global Glow Effects */}
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
     </div>
   );
 };

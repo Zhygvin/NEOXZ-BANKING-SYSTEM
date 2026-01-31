@@ -1,24 +1,25 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Wallet, ShieldCheck, Activity, Globe, ArrowUpRight, Zap, 
   Server, ChevronDown, ChevronUp, Database, ArrowLeft, Radio,
   Cloud, HardDrive, Cpu, Layers, Link, CreditCard, Bot, CheckCircle2,
-  WalletCards, FileCheck, Landmark, ExternalLink, Network, Box
+  WalletCards, FileCheck, Landmark, ExternalLink, Network, Box, Crown, Coins, CloudLightning
 } from 'lucide-react';
 import { SystemStatus, IngestedFile, TrackedTransaction } from '../types';
 import DataIngestionVault from './DataIngestionVault';
 import RecentTransactions from './RecentTransactions';
+import GooglePayStatusMonitor from './GooglePayStatusMonitor';
 
 interface ConsortiumMasterHubProps {
   stats: SystemStatus;
   activeView: 'OVERVIEW' | 'INGESTION';
   onViewChange: (view: 'OVERVIEW' | 'INGESTION') => void;
   onTriggerAttestation?: () => void;
+  onOpenTunnel?: () => void;
 }
 
 const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({ 
-  stats, activeView, onViewChange, onTriggerAttestation
+  stats, activeView, onViewChange, onTriggerAttestation, onOpenTunnel
 }) => {
   const [ingestedFiles, setIngestedFiles] = useState<IngestedFile[]>([]);
   const [automations, setAutomations] = useState([
@@ -41,6 +42,15 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
       icon: CreditCard
     },
     {
+      id: 'CF-ZERO-TRUST',
+      name: 'Cloudflare Zero Trust Tunnel',
+      url: '#',
+      type: 'INFRASTRUCTURE_SEC',
+      status: 'EDGE_READY',
+      progress: 100,
+      icon: CloudLightning
+    },
+    {
       id: 'SH-PAY-GATEWAY',
       name: 'SH PAY RESPONSE',
       url: 'https://www.sh-pay.com/pay/response/',
@@ -55,7 +65,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
       url: '#', // Internal linking or placeholder
       type: 'ISSUER_INTEGRATION',
       status: 'LINKED', // Auto-linked per mandate
-      progress: 100,
+      progress: 100, 
       icon: WalletCards
     }
   ]);
@@ -81,7 +91,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
     const interval = setInterval(() => {
       setAutomations(prev => prev.map(a => {
         // Automatically advance non-linked items
-        if (a.status !== 'LINKED' && a.status !== 'AUDIT_BALANCING_VAULT') {
+        if (a.status !== 'LINKED' && a.status !== 'AUDIT_BALANCING_VAULT' && a.status !== 'EDGE_READY') {
           const next = a.progress + 10;
           if (next >= 100) return { ...a, progress: 100, status: 'LINKED' };
           return { ...a, progress: next };
@@ -111,52 +121,74 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      {/* Hero Metric - Light Web Financial Data Source */}
-      <div className="space-y-4">
-         <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-               <Network className="w-5 h-5 text-purple-400" />
-               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Light Web Financial Data Stream</h2>
+      
+      {/* Capital Breakdown Hero */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+         {/* NEOXZ Systemic Capital */}
+         <div className="p-10 rounded-[3.5rem] bg-slate-900/40 border border-emerald-500/20 relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-3xl">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+               <Landmark className="w-40 h-40 text-emerald-500" />
             </div>
-            <div className="flex items-center gap-2">
-               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">GATHERING PAYMENTS & COLLECTIONS</span>
+            <div className="relative z-10 space-y-4">
+               <div className="flex items-center gap-4 mb-2">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                     <Globe className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">NEOXZ Systemic Capital</span>
+               </div>
+               <div className="text-4xl sm:text-5xl font-black text-white tracking-tighter leading-none mono glow-emerald">
+                  $985,004,531,802.00
+               </div>
+               <div className="flex items-center gap-3">
+                  <div className="h-1 w-16 bg-emerald-500 rounded-full"></div>
+                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+                     Global Liquidity Core
+                  </span>
+               </div>
             </div>
          </div>
-         <div className="text-7xl font-black text-white tracking-tighter leading-none">
-            $985<span className="text-slate-600">.</span>004B
+
+         {/* Founder Reserve */}
+         <div className="p-10 rounded-[3.5rem] bg-slate-900/40 border border-amber-500/20 relative overflow-hidden group hover:border-amber-500/40 transition-all shadow-3xl">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+               <Crown className="w-40 h-40 text-amber-500" />
+            </div>
+            <div className="relative z-10 space-y-4">
+               <div className="flex items-center gap-4 mb-2">
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                     <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Founder Authority (NE.B.RU)</span>
+               </div>
+               <div className="text-4xl sm:text-5xl font-black text-white tracking-tighter leading-none mono">
+                  $500,004,531,802.00
+               </div>
+               <div className="flex items-center gap-3">
+                  <div className="h-1 w-16 bg-amber-500 rounded-full"></div>
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                     Liquid Reserve • Immediate Access
+                  </span>
+               </div>
+            </div>
          </div>
-         <div className="h-0.5 w-full bg-slate-900 rounded-full overflow-hidden">
-            <div className="h-full bg-purple-500 w-full animate-[shimmer_2s_infinite_linear] bg-[length:200%_100%]"></div>
-         </div>
-         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
-            Data Source: Payments, Collections & Digital Currencies (Light Web)
-         </p>
       </div>
 
-      {/* KPI Grid - Clean Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-         {[
-           { label: 'Latency', value: '0.0001ms', icon: Activity, color: 'text-indigo-400' },
-           { label: 'Active Nodes', value: '4,117', icon: Server, color: 'text-cyan-400' },
-           { label: 'Reality Parity', value: '1.0000', icon: Globe, color: 'text-emerald-400' },
-           { label: 'Forensic Lock', value: 'SECURE', icon: ShieldCheck, color: 'text-white' }
-         ].map((m, i) => (
-           <div key={i} className="minimal-card p-6 rounded-2xl flex flex-col justify-between h-32 group hover:bg-white/[0.02]">
-              <div className="flex justify-between items-start">
-                 <m.icon className={`w-5 h-5 ${m.color}`} />
-              </div>
-              <div>
-                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">{m.label}</span>
-                 <span className="text-xl font-black text-slate-200 mono">{m.value}</span>
-              </div>
-           </div>
-         ))}
+      {/* Light Web Data Source Indicator */}
+      <div className="flex items-center justify-between px-6 py-4 rounded-[2rem] bg-slate-900/30 border border-slate-800">
+         <div className="flex items-center gap-4">
+            <Network className="w-5 h-5 text-purple-400 animate-pulse" />
+            <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Data Source: Light Web Financial Stream</span>
+         </div>
+         <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">GATHERING PAYMENTS & COLLECTIONS</span>
+         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <div className="lg:col-span-2">
+         <div className="lg:col-span-2 space-y-8">
             <RecentTransactions transactions={mockTransactions} />
+            <GooglePayStatusMonitor />
          </div>
          
          <div className="space-y-4">
@@ -186,10 +218,14 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                </div>
                <div className="space-y-3">
                   {automations.map((auto, i) => (
-                    <div key={i} className={`flex flex-col gap-2 p-3 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden group ${auto.id === 'QUANTUM-BANK-SYS' ? 'border-emerald-500/50 bg-emerald-500/10' : auto.id === 'BCR2DN4TU7BMDMDU' ? 'border-blue-500/30 bg-blue-500/5' : ''}`}>
+                    <div key={i} className={`flex flex-col gap-2 p-3 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden group ${
+                      auto.id === 'QUANTUM-BANK-SYS' ? 'border-emerald-500/50 bg-emerald-500/10' : 
+                      auto.id === 'CF-ZERO-TRUST' ? 'border-orange-500/30 bg-orange-500/5' :
+                      auto.id === 'BCR2DN4TU7BMDMDU' ? 'border-blue-500/30 bg-blue-500/5' : ''
+                    }`}>
                        <div className="flex items-center justify-between relative z-10">
                           <div className="flex items-center gap-3">
-                             <div className="p-2 rounded-lg bg-black text-purple-400">
+                             <div className={`p-2 rounded-lg bg-black ${auto.id === 'CF-ZERO-TRUST' ? 'text-orange-500' : 'text-purple-400'}`}>
                                 <auto.icon className="w-4 h-4" />
                              </div>
                              <div className="flex flex-col">
@@ -202,10 +238,10 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                              </div>
                           </div>
                           <div className="flex items-center gap-2">
-                             <span className={`text-[8px] font-black uppercase tracking-wider ${auto.status.includes('LINKED') || auto.status.includes('AUDIT') ? 'text-emerald-500' : 'text-amber-500 animate-pulse'}`}>
+                             <span className={`text-[8px] font-black uppercase tracking-wider ${auto.status.includes('LINKED') || auto.status.includes('AUDIT') || auto.status === 'EDGE_READY' ? 'text-emerald-500' : 'text-amber-500 animate-pulse'}`}>
                                 {auto.status}
                              </span>
-                             {(auto.status.includes('LINKED') || auto.status.includes('AUDIT')) && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                             {(auto.status.includes('LINKED') || auto.status.includes('AUDIT') || auto.status === 'EDGE_READY') && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                           </div>
                        </div>
                        
@@ -214,7 +250,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                             <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${auto.progress}%` }}></div>
                          </div>
                        ) : (
-                         <div className="absolute inset-0 bg-emerald-500/5 border-l-2 border-emerald-500 pointer-events-none"></div>
+                         <div className={`absolute inset-0 border-l-2 pointer-events-none ${auto.id === 'CF-ZERO-TRUST' ? 'bg-orange-500/5 border-orange-500' : 'bg-emerald-500/5 border-emerald-500'}`}></div>
                        )}
                        
                        {/* Specific Action for Google Pay */}
@@ -240,8 +276,19 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                            ACCESS VAULT & AUDIT
                          </a>
                        )}
+
+                       {/* Action for Cloudflare Tunnel */}
+                       {auto.id === 'CF-ZERO-TRUST' && (
+                         <button 
+                           onClick={onOpenTunnel}
+                           className="w-full mt-2 py-2 rounded-lg bg-[#F48120] text-black font-black text-[9px] uppercase tracking-widest hover:bg-orange-500 transition-all flex items-center justify-center gap-2 relative z-20 shadow-lg"
+                         >
+                           <ShieldCheck className="w-3 h-3" />
+                           ESTABLISH SECURE TUNNEL
+                         </button>
+                       )}
                        
-                       {auto.id !== 'BCR2DN4TU7BMDMDU' && auto.id !== 'QUANTUM-BANK-SYS' && (
+                       {auto.id !== 'BCR2DN4TU7BMDMDU' && auto.id !== 'QUANTUM-BANK-SYS' && auto.id !== 'CF-ZERO-TRUST' && (
                          <a href={auto.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10" />
                        )}
                     </div>
@@ -249,7 +296,7 @@ const ConsortiumMasterHub: React.FC<ConsortiumMasterHubProps> = ({
                </div>
             </div>
 
-            {/* Cloud Resources Section - Updated for clarity */}
+            {/* Cloud Resources Section */}
             <div className="minimal-card p-6 rounded-2xl flex flex-col gap-4">
                <div className="flex items-center gap-3 mb-2">
                   <Cloud className="w-5 h-5 text-blue-400" />

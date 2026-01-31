@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { 
   ListFilter, Calendar, AlertCircle, Clock, 
   CheckCircle2, Circle, ArrowUp, ArrowDown,
-  Layers, Filter, Plus, LayoutList, GripVertical, X, ShieldAlert, User, Users, FileText, ChevronDown, ChevronUp, Trash2
+  Layers, Filter, Plus, LayoutList, GripVertical, X, ShieldAlert, User, Users, FileText, ChevronDown, ChevronUp, Trash2, Flame, ShieldX, Scan, Unlock, Lock
 } from 'lucide-react';
 import { ProtocolTask } from '../types';
 
@@ -15,17 +15,14 @@ const TEAM_MEMBERS = [
   { id: 'FOUNDER', name: 'FOUNDER', initials: 'NB', color: 'bg-emerald-600 border-emerald-400' },
 ];
 
-// Simple Markdown parser for rich text effect
 const renderRichText = (text: string) => {
   if (!text) return null;
   return text.split('\n').map((line, i) => {
-    // Bold: **text**
     const parts = line.split(/(\*\*.*?\*\*)/g);
     const content = parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <span key={index} className="font-bold text-white">{part.slice(2, -2)}</span>;
       }
-      // Italic: *text*
       const subParts = part.split(/(\*.*?\*)/g);
       return subParts.map((sub, subIndex) => {
         if (sub.startsWith('*') && sub.endsWith('*')) {
@@ -61,6 +58,8 @@ const ProtocolManager: React.FC = () => {
 
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [isIncinerating, setIsIncinerating] = useState(false);
+  const [safetyInterlock, setSafetyInterlock] = useState(false);
 
   const [tasks, setTasks] = useState<ProtocolTask[]>([
     {
@@ -111,19 +110,17 @@ const ProtocolManager: React.FC = () => {
 
   const handleCreateTask = () => {
     if (!newTitle.trim()) return;
-    
     const newTask: ProtocolTask = {
       id: `PT-${Math.floor(Math.random() * 9000) + 1000}`,
       title: newTitle,
       description: newDescription,
       priority: newPriority,
       status: 'PENDING',
-      dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 24h default
+      dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
       createdAt: new Date().toISOString(),
       tags: ['MANUAL_OVERRIDE'],
       assignee: newAssignee || undefined
     };
-
     setTasks(prev => [newTask, ...prev]);
     setIsCreating(false);
     setNewTitle('');
@@ -132,10 +129,19 @@ const ProtocolManager: React.FC = () => {
     setNewAssignee('');
   };
 
-  const confirmDeleteTask = () => {
-    if (taskToDelete) {
+  const initiateDeletion = (id: string) => {
+    setTaskToDelete(id);
+    setSafetyInterlock(false);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (taskToDelete && safetyInterlock) {
+      setIsIncinerating(true);
+      await new Promise(r => setTimeout(r, 1200)); // Visual "incineration" delay
       setTasks(prev => prev.filter(t => t.id !== taskToDelete));
       setTaskToDelete(null);
+      setIsIncinerating(false);
+      setSafetyInterlock(false);
     }
   };
 
@@ -164,14 +170,11 @@ const ProtocolManager: React.FC = () => {
 
   const sortedTasks = useMemo(() => {
     let filtered = [...tasks];
-    
     if (filterAssignee !== 'ALL') {
       filtered = filtered.filter(t => t.assignee === filterAssignee);
     }
-
     const sorted = filtered.sort((a, b) => {
       let comparison = 0;
-      
       switch (sortOption) {
         case 'DUE_DATE':
           comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
@@ -183,7 +186,6 @@ const ProtocolManager: React.FC = () => {
           comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           break;
       }
-      
       return sortDirection === 'ASC' ? comparison : -comparison;
     });
     return sorted;
@@ -225,6 +227,8 @@ const ProtocolManager: React.FC = () => {
     return TEAM_MEMBERS.find(m => m.id === id);
   };
 
+  const taskToDeleteDetails = tasks.find(t => t.id === taskToDelete);
+
   return (
     <div className="flex flex-col h-full space-y-8 animate-in fade-in duration-700 relative">
       {/* Header & Controls */}
@@ -240,7 +244,6 @@ const ProtocolManager: React.FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row items-center gap-4 bg-black/40 p-2 rounded-[2rem] border border-slate-800 w-full xl:w-auto">
-           {/* Sort Options */}
            <div className="flex gap-2">
               {[
                 { id: 'DUE_DATE', label: 'Timeline', icon: Calendar },
@@ -273,7 +276,6 @@ const ProtocolManager: React.FC = () => {
 
            <div className="w-[1px] h-8 bg-slate-800 mx-1 hidden md:block"></div>
 
-           {/* Assignee Filter */}
            <div className="flex gap-1 overflow-x-auto max-w-[300px] custom-scrollbar pb-1 md:pb-0">
               <button 
                 onClick={() => setFilterAssignee('ALL')}
@@ -343,7 +345,6 @@ const ProtocolManager: React.FC = () => {
                               </h3>
                            </div>
                            
-                           {/* Truncated description preview */}
                            {!isExpanded && task.description && (
                              <p className="text-[10px] text-slate-400 font-medium truncate max-w-xl">
                                {task.description.replace(/\n/g, ' ')}
@@ -394,7 +395,7 @@ const ProtocolManager: React.FC = () => {
                         </button>
 
                         <button 
-                          onClick={() => setTaskToDelete(task.id)}
+                          onClick={() => initiateDeletion(task.id)}
                           className="p-3 rounded-xl bg-transparent hover:bg-slate-900 text-slate-600 hover:text-rose-500 transition-colors"
                           title="Delete Protocol"
                         >
@@ -403,7 +404,6 @@ const ProtocolManager: React.FC = () => {
                      </div>
                    </div>
 
-                   {/* Expanded Rich Details */}
                    {isExpanded && (
                      <div className="px-10 pb-8 pt-2 border-t border-slate-800/50 bg-black/20 animate-in slide-in-from-top-2 duration-300">
                         <div className="flex gap-4">
@@ -532,36 +532,105 @@ Use *italics* for nuance.
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal with Safety Interlock */}
       {taskToDelete && (
-        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-200">
-           <div className="bg-slate-900 border border-slate-800 rounded-[3rem] p-10 max-w-md w-full shadow-2xl flex flex-col items-center text-center space-y-6 transform animate-in zoom-in-95">
-              <div className="p-6 rounded-full bg-slate-800 border border-slate-700 text-rose-500">
-                 <Trash2 className="w-10 h-10" />
+        <div className="fixed inset-0 z-[6000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-8 animate-in fade-in duration-300">
+           {/* Scanline Effect Overlay */}
+           <div className="absolute inset-0 pointer-events-none opacity-10 overflow-hidden">
+              <div className="w-full h-1 bg-rose-500 absolute top-0 animate-[scan-vertical_4s_linear_infinite]"></div>
+           </div>
+           
+           <div className={`bg-[#0a0505] border-2 border-rose-500/40 rounded-[3rem] p-12 max-w-xl w-full shadow-[0_0_100px_rgba(244,63,94,0.15)] flex flex-col items-center text-center space-y-8 transform animate-in zoom-in-95 duration-300 relative overflow-hidden ${isIncinerating ? 'contrast-150 grayscale' : ''}`}>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent"></div>
+              
+              <div className={`p-8 rounded-full bg-rose-500/10 border-2 border-rose-500/50 text-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.4)] ${isIncinerating ? 'animate-ping' : safetyInterlock ? 'animate-pulse scale-110 transition-transform duration-500' : ''}`}>
+                 {isIncinerating ? <Flame className="w-16 h-16" /> : <ShieldX className="w-16 h-16" />}
               </div>
-              <div className="space-y-2">
-                 <h4 className="text-xl font-black text-white uppercase tracking-wider">Confirm Removal</h4>
-                 <p className="text-xs text-slate-400 font-medium">
-                   Are you sure you want to delete this protocol task? This action cannot be undone.
-                 </p>
+
+              <div className="space-y-4 w-full">
+                 <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-rose-500 text-black font-black uppercase tracking-[0.4em] text-[10px]">
+                    <ShieldAlert className="w-4 h-4" />
+                    Protocol Incineration Warning
+                 </div>
+                 
+                 <h4 className="text-3xl font-black text-white uppercase tracking-tighter">Confirm Deletion</h4>
+                 
+                 <div className="p-6 rounded-2xl bg-black border border-rose-500/20 text-left space-y-4">
+                    <div className="flex flex-col gap-1">
+                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Protocol Identifier</span>
+                       <span className="text-lg font-black text-rose-400 mono uppercase tracking-tight">{taskToDeleteDetails?.id}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Protocol Title</span>
+                       <span className="text-sm font-bold text-white uppercase truncate">"{taskToDeleteDetails?.title}"</span>
+                    </div>
+                 </div>
+
+                 {/* Safety Interlock Switch */}
+                 <div className="pt-4 pb-2 w-full flex flex-col items-center gap-4">
+                   <div className="flex items-center justify-between w-full px-8 py-4 rounded-2xl bg-white/5 border border-white/10 group cursor-pointer" onClick={() => setSafetyInterlock(!safetyInterlock)}>
+                      <div className="flex items-center gap-4">
+                        {safetyInterlock ? <Unlock className="w-5 h-5 text-emerald-500" /> : <Lock className="w-5 h-5 text-rose-500" />}
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${safetyInterlock ? 'text-emerald-500' : 'text-slate-400'}`}>
+                          Safety Interlock {safetyInterlock ? 'Disengaged' : 'Engaged'}
+                        </span>
+                      </div>
+                      <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${safetyInterlock ? 'bg-emerald-500' : 'bg-slate-800'}`}>
+                        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300 ${safetyInterlock ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                      </div>
+                   </div>
+                   <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed max-w-md mx-auto">
+                     This action will permanently scrub this record from the local ledger. <span className="text-rose-500">Forensic reconstruction is impossible.</span>
+                   </p>
+                 </div>
               </div>
-              <div className="flex gap-4 w-full pt-4">
+
+              <div className="flex gap-6 w-full pt-4 relative z-10">
                  <button 
                    onClick={() => setTaskToDelete(null)}
-                   className="flex-1 py-4 rounded-2xl bg-slate-800 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-700 transition-all"
+                   disabled={isIncinerating}
+                   className="flex-1 py-6 rounded-[2rem] bg-slate-900 border-2 border-slate-800 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 hover:text-white transition-all disabled:opacity-20"
                  >
-                   Cancel
+                   Abort Request
                  </button>
                  <button 
                    onClick={confirmDeleteTask}
-                   className="flex-1 py-4 rounded-2xl bg-rose-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-rose-500 transition-all shadow-lg shadow-rose-500/20"
+                   disabled={isIncinerating || !safetyInterlock}
+                   className={`flex-[2] py-6 rounded-[2rem] border-2 font-black uppercase tracking-[0.4em] text-[11px] transition-all flex items-center justify-center gap-4 group ${
+                     safetyInterlock 
+                       ? 'bg-rose-600 border-rose-400 text-white shadow-[0_0_50px_rgba(244,63,94,0.4)] active:scale-95' 
+                       : 'bg-slate-950 border-slate-800 text-slate-700 opacity-40 cursor-not-allowed'
+                   }`}
                  >
-                   Delete
+                   {isIncinerating ? (
+                     <>
+                       <Clock className="w-5 h-5 animate-spin" />
+                       Incinerating...
+                     </>
+                   ) : (
+                     <>
+                       <Trash2 className="w-5 h-5 group-hover:scale-125 transition-transform" />
+                       Confirm Erasure
+                     </>
+                   )}
                  </button>
+              </div>
+              
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[8px] font-mono text-rose-900 uppercase tracking-widest opacity-40">
+                 SDS_ERASURE_PROTO_v16.0
               </div>
            </div>
         </div>
       )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan-vertical {
+          0% { top: 0; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}} />
     </div>
   );
 };
